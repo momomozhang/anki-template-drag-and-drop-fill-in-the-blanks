@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag and Drop Fill in the Blanks - Editor</title>
+    <style>
+        /* Editor Interface Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .main-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        /* Editor Section */
+        .editor-section {
+            margin-bottom: 30px;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .editor-header h3 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 1.2em;
+        }
+
+        .editor-mode-toggle {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .editor-mode-toggle:hover {
+            background: #5a6268;
+        }
+
+        .editor-mode-toggle.active {
+            background: #007bff;
+        }
+
+        /* Editor Toolbar */
+        .editor-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .drag-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            font-family: monospace;
+        }
+
+        .drag-button:hover {
+            background-color: #5a6268;
+        }
+
+        .drag-button:disabled {
+            background-color: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .toolbar-info {
+            font-size: 12px;
+            color: #6c757d;
+            margin-left: 10px;
+        }
+
+        /* Editor Text Area */
+        .editor-text {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            outline: none;
+            resize: vertical;
+            background-color: white;
+            transition: border-color 0.3s ease;
+        }
+
+        .editor-text:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        /* Syntax Highlighting */
+        .drag-syntax {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 3px;
+            padding: 2px 4px;
+            margin: 0 1px;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .preview-header h4 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 1.1em;
+        }
+
+        .preview-mode-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .preview-mode-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+
+        .preview-mode-btn:hover {
+            background: #5a6268;
+        }
+
+        .preview-mode-btn.active {
+            background: #007bff;
+        }
+
+        .preview-content {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+            font-size: 16px;
+            line-height: 1.6;
+            min-height: 100px;
+        }
+
+        /* Underlined gaps for study mode preview */
+        .preview-blank {
+            display: inline;
+            border-bottom: 2px solid #007bff;
+            background-color: #f8f9ff;
+            padding: 2px 4px;
+            margin: 0 2px;
+            min-width: 60px;
+            text-align: center;
+            font-weight: 500;
+            color: #007bff;
+        }
+
+        /* Extracted items display */
+        .extracted-items {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+        }
+
+        .extracted-items h5 {
+            margin: 0 0 10px 0;
+            color: #1565c0;
+            font-size: 14px;
+        }
+
+        .extracted-items .items-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .extracted-item {
+            background-color: #1cb0f6;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Instructions */
+        .instructions {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .instructions h4 {
+            color: #1565c0;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+            color: #1565c0;
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-info {
+            background-color: #cce7ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        /* Study Mode Styles */
+        .study-section {
+            margin-top: 30px;
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+        }
+
+        .study-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .study-header h3 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 1.3em;
+        }
+
+        .study-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .study-btn {
+            background-color: #58cc02;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .study-btn:hover {
+            background-color: #4caf50;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .study-btn:active {
+            transform: scale(0.95);
+        }
+
+        .study-btn.secondary {
+            background-color: #6c757d;
+        }
+
+        .study-btn.secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .study-question {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid #58cc02;
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Inline Drop Zones */
+        .inline-drop-zone {
+            display: inline-block;
+            min-width: 100px;
+            min-height: 30px;
+            border-bottom: 3px solid #007bff;
+            background-color: #f8f9ff;
+            padding: 4px 8px;
+            margin: 0 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+
+        .inline-drop-zone:empty::before {
+            content: '___';
+            color: #007bff;
+            font-weight: 500;
+        }
+
+        .inline-drop-zone.drag-over {
+            background-color: #e3f2fd;
+            border-bottom-color: #1cb0f6;
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(28, 176, 246, 0.3);
+        }
+
+        .inline-drop-zone.filled {
+            background-color: #e8f5e8;
+            border-bottom-color: #58cc02;
+            color: #2d5b2d;
+            font-weight: 600;
+        }
+
+        .inline-drop-zone.correct {
+            background-color: #d4edda;
+            border-bottom-color: #28a745;
+            animation: correctPulse 0.6s ease;
+        }
+
+        .inline-drop-zone.incorrect {
+            background-color: #f8d7da;
+            border-bottom-color: #dc3545;
+            animation: incorrectShake 0.6s ease;
+        }
+
+        /* Draggable Items Container */
+        .draggable-items-container {
+            margin-bottom: 30px;
+        }
+
+        .draggable-items-container h4 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .draggable-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            border: 2px dashed #dee2e6;
+            min-height: 80px;
+            align-items: flex-start;
+            align-content: flex-start;
+        }
+
+        .draggable-item {
+            background-color: #1cb0f6;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 25px;
+            cursor: grab;
+            user-select: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            border: 2px solid transparent;
+        }
+
+        .draggable-item:hover {
+            background-color: #0ea5e9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .draggable-item:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .draggable-item.dragging {
+            opacity: 0.7;
+            transform: rotate(3deg) scale(1.05);
+            z-index: 1000;
+        }
+
+        .draggable-item.used {
+            opacity: 0.3;
+            pointer-events: none;
+            background-color: #6c757d;
+        }
+
+        /* Study Results */
+        .study-results {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score-display h3 {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .feedback-messages {
+            display: grid;
+            gap: 10px;
+        }
+
+        .feedback-item {
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feedback-item.correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback-item.incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .feedback-icon {
+            font-size: 18px;
+        }
+
+        /* Animations */
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); background-color: #c3e6cb; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .main-container {
+                padding: 20px;
+            }
+            
+            .editor-toolbar {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .toolbar-info {
+                width: 100%;
+                margin-left: 0;
+                margin-top: 5px;
+            }
+
+            .study-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .study-controls {
+                justify-content: center;
+            }
+
+            .study-question {
+                font-size: 16px;
+                padding: 20px;
+            }
+
+            .inline-drop-zone {
+                min-width: 80px;
+                font-size: 14px;
+            }
+
+            .draggable-item {
+                font-size: 13px;
+                padding: 8px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Instructions -->
+        <div class="instructions">
+            <h4>📝 How to Create Drag-and-Drop Blanks</h4>
+            <ol>
+                <li>Paste or type your text in the editor below</li>
+                <li>Select the words/phrases you want to become blanks</li>
+                <li>Click the <strong>[…]</strong> button to mark them as draggable blanks</li>
+                <li>Preview shows how it will look when studying</li>
+                <li>Copy the syntax to your Anki Question field</li>
+            </ol>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="status-container"></div>
+
+        <!-- Editor Section -->
+        <div class="editor-section">
+            <div class="editor-header">
+                <h3>Question Editor</h3>
+                <button class="editor-mode-toggle" id="mode-toggle">
+                    📝 Edit Mode
+                </button>
+            </div>
+
+            <div class="editor-toolbar">
+                <button class="drag-button" id="drag-blank-btn" title="Mark selected text as drag-and-drop blank">
+                    […] Mark as Blank
+                </button>
+                <button class="drag-button" id="clear-blanks-btn" title="Clear all blanks">
+                    🔄 Clear All
+                </button>
+                <button class="drag-button" id="undo-btn" title="Undo last action">
+                    ↶ Undo
+                </button>
+                <span class="toolbar-info">
+                    Select text and click […] to create blanks | Keyboard: Ctrl+Shift+D
+                </span>
+            </div>
+
+            <div class="editor-text" id="question-editor" contenteditable="true" 
+                 placeholder="Paste your text here... For example: 'You simply upload your code and Elastic Beanstalk automatically handles the deployment.'">
+            </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-section">
+            <div class="preview-header">
+                <h4>👁️ Preview</h4>
+                <div class="preview-mode-buttons">
+                    <button class="preview-mode-btn active" id="preview-syntax-btn">Syntax</button>
+                    <button class="preview-mode-btn" id="preview-study-btn">Study</button>
+                </div>
+            </div>
+            <div class="preview-content" id="preview-display">
+                Type or paste your text above to see the preview...
+            </div>
+            <div class="extracted-items" id="extracted-items-section" style="display: none;">
+                <h5>📦 Extracted Items:</h5>
+                <div class="items-list" id="items-list"></div>
+            </div>
+        </div>
+
+        <!-- Study Mode Section -->
+        <div class="study-section" id="study-section" style="display: none;">
+            <div class="study-header">
+                <h3>🎯 Study Mode</h3>
+                <div class="study-controls">
+                    <button class="study-btn" id="check-answers-btn">Check Answers</button>
+                    <button class="study-btn" id="show-answers-btn" style="display: none;">Show Answers</button>
+                    <button class="study-btn" id="reset-study-btn">Reset</button>
+                    <button class="study-btn secondary" id="back-to-editor-btn">← Back to Editor</button>
+                </div>
+            </div>
+            
+            <!-- Study Question -->
+            <div class="study-question" id="study-question">
+                <!-- Question with inline drop zones will be rendered here -->
+            </div>
+            
+            <!-- Draggable Items -->
+            <div class="draggable-items-container">
+                <h4>Drag these items to fill the blanks:</h4>
+                <div class="draggable-items" id="draggable-items">
+                    <!-- Draggable items will be rendered here -->
+                </div>
+            </div>
+            
+            <!-- Study Results -->
+            <div class="study-results" id="study-results" style="display: none;">
+                <div class="score-display" id="score-display"></div>
+                <div class="feedback-messages" id="feedback-messages"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let editorState = {
+            history: [],
+            currentHistoryIndex: -1,
+            blankCounter: 0,
+            blanksMap: new Map(),
+            previewMode: 'syntax', // 'syntax' or 'study'
+            currentMode: 'editor' // 'editor' or 'study'
+        };
+
+        let studyState = {
+            correctAnswers: new Map(),
+            userAnswers: new Map(),
+            isChecked: false,
+            score: 0
+        };
+
+        // DOM elements
+        const questionEditor = document.getElementById('question-editor');
+        const dragBlankBtn = document.getElementById('drag-blank-btn');
+        const clearBlanksBtn = document.getElementById('clear-blanks-btn');
+        const undoBtn = document.getElementById('undo-btn');
+        const previewDisplay = document.getElementById('preview-display');
+        const extractedItemsSection = document.getElementById('extracted-items-section');
+        const itemsList = document.getElementById('items-list');
+        const statusContainer = document.getElementById('status-container');
+        const modeToggle = document.getElementById('mode-toggle');
+        const previewSyntaxBtn = document.getElementById('preview-syntax-btn');
+        const previewStudyBtn = document.getElementById('preview-study-btn');
+        
+        // Study mode elements
+        const studySection = document.getElementById('study-section');
+        const studyQuestion = document.getElementById('study-question');
+        const draggableItems = document.getElementById('draggable-items');
+        const checkAnswersBtn = document.getElementById('check-answers-btn');
+        const showAnswersBtn = document.getElementById('show-answers-btn');
+        const resetStudyBtn = document.getElementById('reset-study-btn');
+        const backToEditorBtn = document.getElementById('back-to-editor-btn');
+        const studyResults = document.getElementById('study-results');
+        const scoreDisplay = document.getElementById('score-display');
+        const feedbackMessages = document.getElementById('feedback-messages');
+
+        // Initialize editor
+        function initializeEditor() {
+            // Add event listeners
+            dragBlankBtn.addEventListener('click', createDragBlank);
+            clearBlanksBtn.addEventListener('click', clearAllBlanks);
+            undoBtn.addEventListener('click', undoLastAction);
+            questionEditor.addEventListener('input', handleEditorInput);
+            questionEditor.addEventListener('paste', handlePaste);
+            
+            // Preview mode buttons
+            previewSyntaxBtn.addEventListener('click', () => setPreviewMode('syntax'));
+            previewStudyBtn.addEventListener('click', () => setPreviewMode('study'));
+            
+            // Mode toggle
+            modeToggle.addEventListener('click', toggleMode);
+            
+            // Study mode buttons
+            checkAnswersBtn.addEventListener('click', checkAnswers);
+            showAnswersBtn.addEventListener('click', showAnswers);
+            resetStudyBtn.addEventListener('click', resetStudy);
+            backToEditorBtn.addEventListener('click', backToEditor);
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboardShortcuts);
+            
+            // Initialize state
+            saveToHistory();
+            updatePreview();
+            updateButtons();
+        }
+
+        // Handle keyboard shortcuts
+        function handleKeyboardShortcuts(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                createDragBlank();
+            }
+            if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                undoLastAction();
+            }
+        }
+
+        // Create drag-and-drop blank
+        function createDragBlank() {
+            const selection = window.getSelection();
+            
+            if (selection.rangeCount === 0 || selection.toString().trim() === '') {
+                showStatus('Please select some text to mark as a blank.', 'warning');
+                return;
+            }
+
+            const selectedText = selection.toString().trim();
+            const range = selection.getRangeAt(0);
+
+            // Check if selection is within the editor
+            if (!questionEditor.contains(range.commonAncestorContainer)) {
+                showStatus('Please select text within the question editor.', 'warning');
+                return;
+            }
+
+            // Check if selection already contains blanks
+            const selectedHTML = range.cloneContents();
+            if (selectedHTML.querySelector('.drag-syntax')) {
+                showStatus('Selected text already contains blanks. Please select plain text.', 'warning');
+                return;
+            }
+
+            // Save current state
+            saveToHistory();
+
+            // Increment blank counter
+            editorState.blankCounter++;
+            const blankId = `d${editorState.blankCounter}`;
+            
+            // Store blank data
+            editorState.blanksMap.set(blankId, selectedText);
+
+            // Create syntax span
+            const syntaxSpan = document.createElement('span');
+            syntaxSpan.className = 'drag-syntax';
+            syntaxSpan.textContent = `{{${blankId}::${selectedText}}}`;
+            syntaxSpan.setAttribute('data-blank-id', blankId);
+            syntaxSpan.setAttribute('data-blank-text', selectedText);
+
+            // Replace selection
+            range.deleteContents();
+            range.insertNode(syntaxSpan);
+
+            // Clear selection
+            selection.removeAllRanges();
+
+            // Update UI
+            updatePreview();
+            updateButtons();
+            showStatus(`"${selectedText}" marked as blank ${editorState.blankCounter}`, 'success');
+        }
+
+        // Clear all blanks
+        function clearAllBlanks() {
+            if (editorState.blanksMap.size === 0) {
+                showStatus('No blanks to clear.', 'info');
+                return;
+            }
+
+            saveToHistory();
+            
+            // Replace all syntax spans with their text content
+            const syntaxSpans = questionEditor.querySelectorAll('.drag-syntax');
+            syntaxSpans.forEach(span => {
+                const textNode = document.createTextNode(span.getAttribute('data-blank-text'));
+                span.parentNode.replaceChild(textNode, span);
+            });
+
+            // Reset state
+            editorState.blankCounter = 0;
+            editorState.blanksMap.clear();
+
+            // Normalize text nodes
+            questionEditor.normalize();
+
+            updatePreview();
+            updateButtons();
+            showStatus('All blanks cleared.', 'info');
+        }
+
+        // Undo last action
+        function undoLastAction() {
+            if (editorState.currentHistoryIndex <= 0) {
+                showStatus('Nothing to undo.', 'info');
+                return;
+            }
+
+            editorState.currentHistoryIndex--;
+            const previousState = editorState.history[editorState.currentHistoryIndex];
+            
+            // Restore HTML
+            questionEditor.innerHTML = previousState.html;
+            
+            // Restore state
+            editorState.blankCounter = previousState.blankCounter;
+            editorState.blanksMap = new Map(previousState.blanksMap);
+
+            updatePreview();
+            updateButtons();
+            showStatus('Undo successful.', 'info');
+        }
+
+        // Handle editor input
+        function handleEditorInput() {
+            // Debounce to avoid too many history saves
+            clearTimeout(window.inputTimeout);
+            window.inputTimeout = setTimeout(() => {
+                updatePreview();
+            }, 300);
+        }
+
+        // Handle paste
+        function handlePaste(e) {
+            e.preventDefault();
+            
+            // Get pasted text
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            
+            // Insert as plain text
+            document.execCommand('insertText', false, pastedText);
+            
+            // Update preview
+            setTimeout(() => {
+                updatePreview();
+            }, 10);
+        }
+
+        // Save current state to history
+        function saveToHistory() {
+            const currentState = {
+                html: questionEditor.innerHTML,
+                blankCounter: editorState.blankCounter,
+                blanksMap: new Map(editorState.blanksMap)
+            };
+
+            // Remove future history if we're not at the end
+            if (editorState.currentHistoryIndex < editorState.history.length - 1) {
+                editorState.history = editorState.history.slice(0, editorState.currentHistoryIndex + 1);
+            }
+
+            // Add new state
+            editorState.history.push(currentState);
+            editorState.currentHistoryIndex = editorState.history.length - 1;
+
+            // Limit history size
+            if (editorState.history.length > 20) {
+                editorState.history.shift();
+                editorState.currentHistoryIndex--;
+            }
+        }
+
+        // Update preview
+        function updatePreview() {
+            const syntaxSpans = questionEditor.querySelectorAll('.drag-syntax');
+            const extractedItems = [];
+
+            let previewContent = '';
+
+            if (editorState.previewMode === 'syntax') {
+                // Show syntax version
+                previewContent = questionEditor.innerHTML;
+            } else {
+                // Show study version with underlined gaps
+                previewContent = questionEditor.innerHTML;
+                
+                syntaxSpans.forEach(span => {
+                    const blankText = span.getAttribute('data-blank-text');
+                    const blankId = span.getAttribute('data-blank-id');
+                    extractedItems.push(blankText);
+                    
+                    // Replace with underlined gap
+                    const gapSpan = `<span class="preview-blank">___</span>`;
+                    previewContent = previewContent.replace(span.outerHTML, gapSpan);
+                });
+            }
+
+            previewDisplay.innerHTML = previewContent || 'Type or paste your text above to see the preview...';
+
+            // Update extracted items
+            if (extractedItems.length > 0) {
+                extractedItemsSection.style.display = 'block';
+                itemsList.innerHTML = extractedItems.map(item => 
+                    `<span class="extracted-item">${item}</span>`
+                ).join('');
+            } else {
+                extractedItemsSection.style.display = 'none';
+            }
+
+            updateButtons();
+        }
+
+        // Set preview mode
+        function setPreviewMode(mode) {
+            editorState.previewMode = mode;
+            
+            // Update button states
+            previewSyntaxBtn.classList.toggle('active', mode === 'syntax');
+            previewStudyBtn.classList.toggle('active', mode === 'study');
+            
+            updatePreview();
+        }
+
+        // Update button states
+        function updateButtons() {
+            const hasContent = questionEditor.textContent.trim().length > 0;
+            const hasBlanks = editorState.blanksMap.size > 0;
+            const canUndo = editorState.currentHistoryIndex > 0;
+
+            clearBlanksBtn.disabled = !hasBlanks;
+            undoBtn.disabled = !canUndo;
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.textContent = message;
+            
+            statusContainer.innerHTML = '';
+            statusContainer.appendChild(statusDiv);
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (statusContainer.contains(statusDiv)) {
+                    statusContainer.removeChild(statusDiv);
+                }
+            }, 3000);
+        }
+
+        // Toggle between editor and study mode
+        function toggleMode() {
+            if (editorState.currentMode === 'editor') {
+                if (editorState.blanksMap.size === 0) {
+                    showStatus('Please create some blanks first before entering study mode.', 'warning');
+                    return;
+                }
+                enterStudyMode();
+            } else {
+                backToEditor();
+            }
+        }
+
+        // Enter study mode
+        function enterStudyMode() {
+            editorState.currentMode = 'study';
+            document.querySelector('.editor-section').style.display = 'none';
+            document.querySelector('.preview-section').style.display = 'none';
+            studySection.style.display = 'block';
+            
+            modeToggle.textContent = '📝 Back to Editor';
+            modeToggle.classList.add('active');
+            
+            initializeStudyMode();
+        }
+
+        // Back to editor
+        function backToEditor() {
+            editorState.currentMode = 'editor';
+            document.querySelector('.editor-section').style.display = 'block';
+            document.querySelector('.preview-section').style.display = 'block';
+            studySection.style.display = 'none';
+            
+            modeToggle.textContent = '🎯 Study Mode';
+            modeToggle.classList.remove('active');
+        }
+
+        // Initialize study mode
+        function initializeStudyMode() {
+            parseQuestionForStudy();
+            createDraggableItemsForStudy();
+            resetStudyState();
+            attachDragAndDropEvents();
+        }
+
+        // Parse question and create inline drop zones
+        function parseQuestionForStudy() {
+            const editorContent = questionEditor.innerHTML;
+            let studyContent = editorContent;
+            
+            // Reset study state
+            studyState.correctAnswers.clear();
+            
+            // Find all syntax spans and replace with inline drop zones
+            const syntaxSpans = questionEditor.querySelectorAll('.drag-syntax');
+            syntaxSpans.forEach(span => {
+                const blankId = span.getAttribute('data-blank-id');
+                const blankText = span.getAttribute('data-blank-text');
+                
+                // Store correct answer
+                studyState.correctAnswers.set(blankId, blankText);
+                
+                // Create inline drop zone
+                const dropZoneHTML = `<span class="inline-drop-zone" data-blank-id="${blankId}"></span>`;
+                studyContent = studyContent.replace(span.outerHTML, dropZoneHTML);
+            });
+            
+            studyQuestion.innerHTML = studyContent;
+        }
+
+        // Create draggable items for study
+        function createDraggableItemsForStudy() {
+            const correctItems = Array.from(studyState.correctAnswers.values());
+            
+            // Shuffle items
+            const shuffledItems = shuffleArray(correctItems);
+            
+            // Create draggable elements
+            draggableItems.innerHTML = '';
+            shuffledItems.forEach((item, index) => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'draggable-item';
+                itemElement.draggable = true;
+                itemElement.textContent = item;
+                itemElement.dataset.itemText = item;
+                itemElement.dataset.itemIndex = index;
+                draggableItems.appendChild(itemElement);
+            });
+        }
+
+        // Shuffle array utility
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Reset study state
+        function resetStudyState() {
+            studyState.userAnswers.clear();
+            studyState.isChecked = false;
+            studyState.score = 0;
+            studyResults.style.display = 'none';
+            checkAnswersBtn.style.display = 'inline-block';
+            showAnswersBtn.style.display = 'none';
+        }
+
+        // Attach drag and drop events
+        function attachDragAndDropEvents() {
+            // Draggable items events
+            const items = draggableItems.querySelectorAll('.draggable-item');
+            items.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+
+            // Drop zones events
+            const dropZones = studyQuestion.querySelectorAll('.inline-drop-zone');
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragenter', handleDragEnter);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+                zone.addEventListener('click', handleDropZoneClick);
+            });
+        }
+
+        // Drag and drop event handlers
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.itemText);
+            e.dataTransfer.setData('item-index', e.target.dataset.itemIndex);
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            e.target.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.target.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('drag-over');
+            
+            const itemText = e.dataTransfer.getData('text/plain');
+            const itemIndex = e.dataTransfer.getData('item-index');
+            const blankId = e.target.dataset.blankId;
+            
+            // Fill the drop zone
+            e.target.textContent = itemText;
+            e.target.classList.add('filled');
+            
+            // Mark item as used
+            const draggedItem = draggableItems.querySelector(`[data-item-index="${itemIndex}"]`);
+            if (draggedItem) {
+                draggedItem.classList.add('used');
+            }
+            
+            // Store user answer
+            studyState.userAnswers.set(blankId, itemText);
+            
+            // Remove previous answer if any
+            const previousItem = draggableItems.querySelector(`[data-item-text="${itemText}"]`);
+            if (previousItem && previousItem !== draggedItem) {
+                previousItem.classList.remove('used');
+            }
+        }
+
+        function handleDropZoneClick(e) {
+            if (e.target.classList.contains('filled')) {
+                // Remove item from drop zone
+                const blankId = e.target.dataset.blankId;
+                const itemText = e.target.textContent;
+                
+                // Clear drop zone
+                e.target.textContent = '';
+                e.target.classList.remove('filled', 'correct', 'incorrect');
+                
+                // Unmark item as used
+                const item = draggableItems.querySelector(`[data-item-text="${itemText}"]`);
+                if (item) {
+                    item.classList.remove('used');
+                }
+                
+                // Remove from user answers
+                studyState.userAnswers.delete(blankId);
+            }
+        }
+
+        // Check answers
+        function checkAnswers() {
+            if (studyState.userAnswers.size === 0) {
+                showStatus('Please fill in some blanks before checking answers.', 'warning');
+                return;
+            }
+            
+            studyState.isChecked = true;
+            studyState.score = 0;
+            const feedback = [];
+            
+            // Check each answer
+            studyState.correctAnswers.forEach((correctAnswer, blankId) => {
+                const userAnswer = studyState.userAnswers.get(blankId);
+                const dropZone = studyQuestion.querySelector(`[data-blank-id="${blankId}"]`);
+                
+                if (userAnswer === correctAnswer) {
+                    studyState.score++;
+                    dropZone.classList.add('correct');
+                    feedback.push({
+                        type: 'correct',
+                        message: `"${correctAnswer}" is correct!`
+                    });
+                } else {
+                    dropZone.classList.add('incorrect');
+                    if (userAnswer) {
+                        feedback.push({
+                            type: 'incorrect',
+                            message: `"${userAnswer}" is incorrect. The correct answer is "${correctAnswer}".`
+                        });
+                    } else {
+                        feedback.push({
+                            type: 'incorrect',
+                            message: `Blank ${blankId} is empty. The correct answer is "${correctAnswer}".`
+                        });
+                    }
+                }
+            });
+            
+            // Display results
+            displayStudyResults(feedback);
+            
+            // Update button states
+            checkAnswersBtn.style.display = 'none';
+            showAnswersBtn.style.display = 'inline-block';
+        }
+
+        // Show answers
+        function showAnswers() {
+            // Fill all blanks with correct answers
+            studyState.correctAnswers.forEach((correctAnswer, blankId) => {
+                const dropZone = studyQuestion.querySelector(`[data-blank-id="${blankId}"]`);
+                dropZone.textContent = correctAnswer;
+                dropZone.classList.remove('filled', 'incorrect');
+                dropZone.classList.add('correct');
+            });
+            
+            // Mark all items as used
+            const items = draggableItems.querySelectorAll('.draggable-item');
+            items.forEach(item => item.classList.add('used'));
+        }
+
+        // Display study results
+        function displayStudyResults(feedback) {
+            const totalQuestions = studyState.correctAnswers.size;
+            const percentage = Math.round((studyState.score / totalQuestions) * 100);
+            
+            scoreDisplay.innerHTML = `
+                <h3>Score: ${studyState.score}/${totalQuestions} (${percentage}%)</h3>
+            `;
+            
+            feedbackMessages.innerHTML = feedback.map(item => `
+                <div class="feedback-item ${item.type}">
+                    <span class="feedback-icon">${item.type === 'correct' ? '✅' : '❌'}</span>
+                    <span>${item.message}</span>
+                </div>
+            `).join('');
+            
+            studyResults.style.display = 'block';
+        }
+
+        // Reset study
+        function resetStudy() {
+            // Clear all drop zones
+            const dropZones = studyQuestion.querySelectorAll('.inline-drop-zone');
+            dropZones.forEach(zone => {
+                zone.textContent = '';
+                zone.classList.remove('filled', 'correct', 'incorrect');
+            });
+            
+            // Reset all draggable items
+            const items = draggableItems.querySelectorAll('.draggable-item');
+            items.forEach(item => {
+                item.classList.remove('used');
+            });
+            
+            // Reset state and UI
+            resetStudyState();
+            
+            showStatus('Study mode reset. Try again!', 'info');
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeEditor);
+    </script>
+</body>
+</html>
