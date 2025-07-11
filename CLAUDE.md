@@ -14,6 +14,49 @@ Demonstrate Claude Code's ability to build complete, functional projects while s
 
 The project appears to be a legitimate educational tool focused on enhancing learning through interactive exercises.
 
+## Detailed Requirements (Established Session 2)
+
+### Core User Experience
+- **Content Creation**: User copies/pastes a paragraph into Question field
+- **Blank Creation**: User selects text portions and clicks a Cloze-style button to create inline blanks
+- **Inline Blanks**: Blanks appear within sentence flow (not as separate drop zones)
+- **Study Experience**: Draggable items below text for filling blanks
+
+### Technical Specifications
+
+#### Anki Field Structure:
+- **Question Field**: Original text with `{{d1::selected_text}}` syntax (d = drag-and-drop)
+- **Items Field**: Auto-populated with selected words (become draggable items)
+- **Answers Field**: Full original text with selected parts highlighted
+
+#### Editor Interface:
+- **Button**: Cloze-style button for creating blanks (integration level flexible)
+- **Selection**: Click button wraps selected text with `{{d1::text}}`, `{{d2::text}}`, etc.
+- **Auto-increment**: Automatically numbers blanks sequentially
+- **Auto-populate**: Updates Items and Answers fields automatically
+
+#### User Workflow Example:
+1. Paste: "You simply upload your code and Elastic Beanstalk automatically handles the deployment"
+2. Select "Elastic Beanstalk" → click button → becomes `{{d1::Elastic Beanstalk}}`
+3. Select "deployment" → click button → becomes `{{d2::deployment}}`
+4. System generates:
+   - **Items**: "Elastic Beanstalk, deployment"
+   - **Answers**: "You simply upload your code and **Elastic Beanstalk** automatically handles the **deployment**"
+
+#### Study Experience:
+- **Display**: "You simply upload your code and _________ automatically handles the _________"
+- **Interaction**: Drag items to fill underlined gaps within text
+- **Appearance**: Blanks show as underlined gaps (like Cloze cards)
+- **Answer Section**: Show complete original paragraph with color coding:
+  - **Green text**: Correct answers (show actual correct word)
+  - **Red text**: Incorrect answers (show what correct answer should be, not user input)
+  - **Natural flow**: Full paragraph context, not individual feedback messages
+
+### Future Features (Not MVP):
+- Distractor items in Items field
+- Multiple instance selection
+- Advanced formatting options
+
 # AI Collaboration Methodology Documentation
 
 ## About Mengni's_CLAUDE_CODE_JOURNEY.md
