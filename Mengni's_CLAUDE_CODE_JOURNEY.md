@@ -32,8 +32,24 @@ Effective AI collaboration requires treating the AI agent as a skilled partner r
 
 ## When an answer is not satisfatory, you can refine your question by press *esc* twice to go back to edit the question.
 
+## Give Claude links, documents or images to understand the project requirements or learn from similar existing projects
+
 ### Project-Specific Insights
-*(Will be updated as the project progresses with specific examples of challenges, pivots, and breakthrough moments)*
+
+#### Session 2: Requirements Discovery & Implementation
+
+**Key Learning**: The importance of the **Explore → Plan → Code** workflow when requirements seemed unclear initially.
+
+**Challenge**: I jumped to coding without fully understanding the user's mental model of "Cloze-style UI for drag-and-drop."
+
+**Breakthrough Moment**: When user said "discard all coding work" and referenced the best practices document, it demonstrated the power of following structured AI collaboration workflows.
+
+**Technical Insights**:
+- Successfully implemented inline drag-and-drop (innovation over existing separate drop-zone patterns)
+- Combined editor and study modes in single template
+- Requirement refinement through iterative clarification (answer section color coding)
+
+**Methodology Win**: Using documentation-first approach (CLAUDE.md updates) to capture requirements before implementation prevented future misunderstandings.
 
 ---
 
