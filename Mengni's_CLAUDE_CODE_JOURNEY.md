@@ -23,16 +23,24 @@ Effective AI collaboration requires treating the AI agent as a skilled partner r
 **Meta-Achievement:** Developed system where AI becomes an active partner in optimizing the human-AI collaboration process, using established best practices to guide both parties toward better outcomes.
 
 
-## Tips
+## Proven Collaboration Techniques
 
-## During planning phase, explicitly ask below to get best results:
+### Planning Phase
 - "Please do not generate any code yet."
-- "Please rephrase my requirements to demonstrate your understanding. If you have questions, please ask."
-- when create plans or documentation, can ask "Please create 3 versions." "Which versions do you think is the best? why?"
+- "Please rephrase my requirements to demonstrate your understanding."
+- "Please create 3 versions. Which do you think is best? Why?"
 
-## When an answer is not satisfatory, you can refine your question by press *esc* twice to go back to edit the question.
+### Problem-Solving Phase
+- **Isolate issues**: "Focus only on [specific component] first"
+- **Define precisely**: Provide screenshots, exact error messages, specific symptoms
+- **Confirm understanding**: "Rephrase this issue to show you understand"
+- **Document attempts**: "What have we tried? What worked/failed?"
 
-## Give Claude links, documents or images to understand the project requirements or learn from similar existing projects
+### Communication Techniques
+- Press *Esc* twice to edit questions when answers aren't satisfactory
+- Provide links, documents, images for context
+- Use visual evidence (screenshots) alongside text descriptions
+- Correct AI assumptions immediately when they diverge from reality
 
 ### Project-Specific Insights
 
@@ -48,6 +56,33 @@ Effective AI collaboration requires treating the AI agent as a skilled partner r
 - Successfully implemented inline drag-and-drop (innovation over existing separate drop-zone patterns)
 - Combined editor and study modes in single template
 - Requirement refinement through iterative clarification (answer section color coding)
+
+#### Session 6: Systematic Debugging Methodology
+
+**Challenge**: Complete template rendering failure - front-side showing blank screen instead of interactive content.
+
+**Critical Methodology Learnings**:
+
+1. **Issue Isolation**: Break complex problems into small, testable components
+   - Separated JavaScript execution from field substitution from UI rendering
+   - Identified DOMContentLoaded as isolated failure point vs field access vs variable scope
+
+2. **Precise Issue Definition**: Use detailed descriptions with visual evidence
+   - User provided screenshot showing empty template
+   - Corrected my assumptions: "not showing parsed content" → "completely blank front-side"
+   - Specific symptoms: no cloze blanks, no draggable items, empty sections
+
+3. **Confirmation Through Rephrasing**: Ensure shared understanding before solutions
+   - Asked Claude to rephrase issue understanding
+   - Prevented solution attempts based on incorrect problem diagnosis
+   - "Template showing literal {{Question}}" → "Template completely empty"
+
+4. **Document Failed Attempts**: Record what didn't work and why
+   - **Session 5 Failure**: Field reference syntax changes (wrong root cause)
+   - **Session 6 Partial**: DOMContentLoaded fix worked for JavaScript execution, revealed field substitution issue
+   - **Learning**: Each "failure" provided crucial diagnostic information for final solution
+
+**Breakthrough Pattern**: Problem → Isolate → Define → Confirm → Test → Document → Iterate
 
 **Methodology Win**: Using documentation-first approach (CLAUDE.md updates) to capture requirements before implementation prevented future misunderstandings.
 
