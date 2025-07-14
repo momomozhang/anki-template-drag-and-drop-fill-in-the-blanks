@@ -51,6 +51,19 @@ Effective AI collaboration requires treating the AI agent as a skilled partner r
 
 **Methodology Win**: Using documentation-first approach (CLAUDE.md updates) to capture requirements before implementation prevented future misunderstandings.
 
+#### Session 4: Complex Problem Solving & Research-Driven Solutions
+
+**Major Challenge**: Add-on automation completely non-functional despite extensive previous attempts
+
+**Strategic Approach**: after multiple failed debugging sessions, I connect Claude Code with Zen MCP to research online the root cause. Together the AI studied multiple working anki template and found the solution.
+
+**Technical Breakthrough**: 
+- **Root Cause**: Wrong architectural approach (JavaScript vs native Qt APIs)
+- **Solution**: Simple `editor.web.selectedText()` property access
+- **Result**: Replaced 500+ lines of failed code with ~20 lines of working automation
+
+**Meta-Learning**: This session demonstrated sophisticated problem-solving methodologies available when combining Claude Code with advanced tools (Zen MCP). The systematic research and analysis capabilities enabled solving a problem that seemed impossible through traditional approaches.
+
 ---
 
 *This document serves as both a methodology showcase and a living example of how professional AI collaboration can enhance development outcomes while maintaining human agency and oversight.*
