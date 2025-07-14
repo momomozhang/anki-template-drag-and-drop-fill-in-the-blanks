@@ -1,0 +1,13 @@
+{
+    "package": "drag_drop_blanks",
+    "name": "Drag-and-Drop Blanks Creator",
+    "mod": 1641024000,
+    "min_point_version": 45,
+    "max_point_version": 0,
+    "branch_index": 0,
+    "author": "Claude Code",
+    "description": "Adds a toolbar button to create [[dN::text]] syntax for drag-and-drop fill-in-the-blank templates. Works similar to cloze deletions but with square bracket syntax.",
+    "homepage": "",
+    "tags": ["editor", "templates", "drag-drop", "blanks"],
+    "version": "1.0.0"
+}

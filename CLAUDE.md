@@ -25,23 +25,24 @@ The project appears to be a legitimate educational tool focused on enhancing lea
 ### Technical Specifications
 
 #### Anki Field Structure:
-- **Question Field**: Original text with `{{d1::selected_text}}` syntax (d = drag-and-drop)
-- **Items Field**: Auto-populated with selected words (become draggable items)
-- **Answers Field**: Full original text with selected parts highlighted
+- **Question Field**: Original text with `[[d1::selected_text]]` syntax (d = drag-and-drop)
+- **Items Field**: Comma-separated draggable items (manually populated)
+- ~~**Answers Field**~~: **REMOVED** - Back template uses Question field directly
 
 #### Editor Interface:
-- **Button**: Cloze-style button for creating blanks (integration level flexible)
-- **Selection**: Click button wraps selected text with `{{d1::text}}`, `{{d2::text}}`, etc.
-- **Auto-increment**: Automatically numbers blanks sequentially
-- **Auto-populate**: Updates Items and Answers fields automatically
+- **Button**: Cloze-style button for creating blanks ⚠️ **CURRENT ISSUE: Not working due to Anki API compatibility**
+- **Manual Syntax**: Users currently type `[[d1::text]]`, `[[d2::text]]` manually
+- **Auto-increment**: Not available without working button
+- **Field Population**: Manual - users populate Items field with comma-separated terms
 
-#### User Workflow Example:
+#### User Workflow Example (Current Manual Process):
 1. Paste: "You simply upload your code and Elastic Beanstalk automatically handles the deployment"
-2. Select "Elastic Beanstalk" → click button → becomes `{{d1::Elastic Beanstalk}}`
-3. Select "deployment" → click button → becomes `{{d2::deployment}}`
-4. System generates:
-   - **Items**: "Elastic Beanstalk, deployment"
-   - **Answers**: "You simply upload your code and **Elastic Beanstalk** automatically handles the **deployment**"
+2. **Manually edit** "Elastic Beanstalk" → type `[[d1::Elastic Beanstalk]]`
+3. **Manually edit** "deployment" → type `[[d2::deployment]]`
+4. **Manually populate** Items field: "Elastic Beanstalk, deployment"
+5. Result: Fully functional drag-and-drop template
+
+⚠️ **Note**: Button automation planned but currently non-functional due to Anki API compatibility issues.
 
 #### Study Experience:
 - **Display**: "You simply upload your code and _________ automatically handles the _________"
@@ -52,9 +53,18 @@ The project appears to be a legitimate educational tool focused on enhancing lea
   - **Red text**: Incorrect answers (show what correct answer should be, not user input)
   - **Natural flow**: Full paragraph context, not individual feedback messages
 
+### Add-on Development Challenges (Attempted but Failed):
+- **Automated text selection**: Anki's QtWebEngine editor doesn't expose selections to JavaScript
+- **Button automation**: Multiple API approaches failed due to selection clearing behavior
+- **Event monitoring**: Standard web APIs (`selectionchange`, `mouseup`) don't work in Anki context
+
+### Current Limitations:
+- No automated "select text → click button" workflow
+- Add-on button non-functional due to Anki editor architecture
+
 ### Future Features (Not MVP):
 - Distractor items in Items field
-- Multiple instance selection
+- Multiple instance selection  
 - Advanced formatting options
 
 # AI Collaboration Methodology Documentation
