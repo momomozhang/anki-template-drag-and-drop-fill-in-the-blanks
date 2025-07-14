@@ -30,19 +30,19 @@ The project appears to be a legitimate educational tool focused on enhancing lea
 - ~~**Answers Field**~~: **REMOVED** - Back template uses Question field directly
 
 #### Editor Interface:
-- **Button**: Cloze-style button for creating blanks ⚠️ **CURRENT ISSUE: Not working due to Anki API compatibility**
-- **Manual Syntax**: Users currently type `[[d1::text]]`, `[[d2::text]]` manually
-- **Auto-increment**: Not available without working button
+- **Button**: ✅ **WORKING** - Cloze-style button for creating blanks using native Qt APIs
+- **Keyboard Shortcut**: `Ctrl+Shift+D` (or `Cmd+Shift+D` on Mac) for quick blank creation
+- **Auto-increment**: ✅ **FUNCTIONAL** - Automatically detects existing blanks and increments counter
 - **Field Population**: Manual - users populate Items field with comma-separated terms
 
-#### User Workflow Example (Current Manual Process):
+#### User Workflow Example (AUTOMATED PROCESS):
 1. Paste: "You simply upload your code and Elastic Beanstalk automatically handles the deployment"
-2. **Manually edit** "Elastic Beanstalk" → type `[[d1::Elastic Beanstalk]]`
-3. **Manually edit** "deployment" → type `[[d2::deployment]]`
+2. **Select text** "Elastic Beanstalk" → **Press Ctrl+Shift+D** → Becomes `[[d1::Elastic Beanstalk]]`
+3. **Select text** "deployment" → **Press Ctrl+Shift+D** → Becomes `[[d2::deployment]]`
 4. **Manually populate** Items field: "Elastic Beanstalk, deployment"
 5. Result: Fully functional drag-and-drop template
 
-⚠️ **Note**: Button automation planned but currently non-functional due to Anki API compatibility issues.
+✅ **AUTOMATION RESTORED**: Fixed using native Qt `selectedText()` API approach.
 
 #### Study Experience:
 - **Display**: "You simply upload your code and _________ automatically handles the _________"
@@ -53,14 +53,28 @@ The project appears to be a legitimate educational tool focused on enhancing lea
   - **Red text**: Incorrect answers (show what correct answer should be, not user input)
   - **Natural flow**: Full paragraph context, not individual feedback messages
 
-### Add-on Development Challenges (Attempted but Failed):
+### Add-on Development Journey (RESOLVED):
+
+#### **Original Challenges (Sessions 1-2):**
 - **Automated text selection**: Anki's QtWebEngine editor doesn't expose selections to JavaScript
-- **Button automation**: Multiple API approaches failed due to selection clearing behavior
+- **Button automation**: Multiple API approaches failed due to selection clearing behavior  
 - **Event monitoring**: Standard web APIs (`selectionchange`, `mouseup`) don't work in Anki context
 
-### Current Limitations:
-- No automated "select text → click button" workflow
-- Add-on button non-functional due to Anki editor architecture
+#### **Research & Analysis (Session 3):**
+Using Claude Code with Zen MCP tools, we conducted systematic investigation:
+- **Hypothesis**: JavaScript selection detection is fundamentally flawed in QtWebEngine
+- **Discovery**: Qt provides native `selectedText()` property that bypasses JavaScript entirely
+- **Architecture Analysis**: Other Anki developers successfully use `editor.web.selectedText()`
+
+#### **Solution Implementation (Session 3):**
+- **Root Cause**: Wrong architectural approach (JavaScript vs native Qt APIs)
+- **Fix**: Replaced 500+ lines of JavaScript with simple `editor.web.selectedText()` calls
+- **Result**: ✅ **WORKING AUTOMATION** - reliable text selection and blank creation
+
+### Current Status:
+- ✅ Fully automated "select text → press shortcut" workflow
+- ✅ Add-on button and keyboard shortcuts functional
+- ✅ Cross-platform compatibility maintained
 
 ### Future Features (Not MVP):
 - Distractor items in Items field
