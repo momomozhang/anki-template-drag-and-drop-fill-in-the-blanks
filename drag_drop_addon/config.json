@@ -1,5 +1,7 @@
 {
     "keyboard_shortcut": "Ctrl+Shift+D",
-    "show_success_tooltip": false,
-    "button_tooltip": "Create drag-drop blank [[dN::text]] (Ctrl+Shift+D)"
+    "show_success_tooltip": true,
+    "button_tooltip": "Create drag-drop blank [[dN::text]] (Ctrl+Shift+D) - Native Qt Version",
+    "version": "1.0.1",
+    "implementation": "native_qt_minimal"
 }
