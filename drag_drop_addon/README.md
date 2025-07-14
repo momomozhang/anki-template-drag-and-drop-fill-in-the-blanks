@@ -17,9 +17,11 @@ This Anki add-on adds a toolbar button to create `[[dN::text]]` syntax for drag-
 
 ## How to Use
 
-1. **Select Text**: Highlight the text you want to turn into a drag-drop blank
-2. **Press Shortcut**: Use `Ctrl+Shift+D` (or `Cmd+Shift+D` on Mac) OR click the toolbar button
-3. **Result**: Selected text becomes `[[dN::text]]` where N is automatically determined
+1. **Create Content**: Paste your text into the Question field
+2. **Select Text**: Highlight the text you want to turn into a drag-drop blank
+3. **Press Shortcut**: Use `Ctrl+Shift+D` (or `Cmd+Shift+D` on Mac) OR click the toolbar button
+4. **Result**: Selected text becomes `[[dN::text]]` where N is automatically determined
+5. **Done**: Template automatically extracts draggable items - no manual field population needed
 
 ## Example
 
@@ -38,13 +40,17 @@ You simply upload your code and [[d1::Elastic Beanstalk]] automatically handles 
 You simply upload your code and [[d1::Elastic Beanstalk]] automatically handles the [[d2::deployment]].
 ```
 
+**Result**: Template automatically creates draggable items "Elastic Beanstalk" and "deployment" without manual field setup.
+
 ## Template Compatibility
 
-This add-on is designed to work with drag-and-drop fill-in-the-blank templates that use the `[[dN::text]]` syntax. It will work with any note type, but is specifically designed for:
+This add-on is designed to work with drag-and-drop fill-in-the-blank templates that use the `[[dN::text]]` syntax. The templates automatically extract draggable items from this syntax, requiring only:
 
-- Drag-and-Drop Fill Blanks templates
-- Custom templates using square bracket syntax
-- Any template that parses `[[d1::text]]` patterns
+- **Question Field**: Contains text with `[[d1::text]]` syntax (created by this add-on)
+- **Explain Field**: Optional explanation/notes field
+- **Smart Template**: Automatically parses `[[d1::text]]` patterns and generates draggable items
+
+**No manual field population required** - the template handles everything automatically.
 
 ## Installation
 

@@ -26,21 +26,24 @@ The project appears to be a legitimate educational tool focused on enhancing lea
 
 #### Anki Field Structure:
 - **Question Field**: Original text with `[[d1::selected_text]]` syntax (d = drag-and-drop)
-- **Items Field**: Comma-separated draggable items (manually populated)
-- ~~**Answers Field**~~: **REMOVED** - Back template uses Question field directly
+- **Answer Field**: Simple explanation/notes for the answer
+- ~~**Items Field**~~: **REMOVED** - Template automatically extracts items from Question field syntax
+- ~~**Notes Field**~~: **REMOVED** - Replaced with simpler Answer field
+- ~~**Extra Field**~~: **REMOVED** - Replaced with simpler Answer field
+- ~~**Explain Field**~~: **REMOVED** - Replaced with Answer field
 
 #### Editor Interface:
 - **Button**: ✅ **WORKING** - Cloze-style button for creating blanks using native Qt APIs
 - **Keyboard Shortcut**: `Ctrl+Shift+D` (or `Cmd+Shift+D` on Mac) for quick blank creation
 - **Auto-increment**: ✅ **FUNCTIONAL** - Automatically detects existing blanks and increments counter
-- **Field Population**: Manual - users populate Items field with comma-separated terms
+- **Smart Parsing**: ✅ **AUTOMATIC** - Template extracts draggable items directly from `[[d1::text]]` syntax
 
-#### User Workflow Example (AUTOMATED PROCESS):
+#### User Workflow Example (FULLY AUTOMATED PROCESS):
 1. Paste: "You simply upload your code and Elastic Beanstalk automatically handles the deployment"
 2. **Select text** "Elastic Beanstalk" → **Press Ctrl+Shift+D** → Becomes `[[d1::Elastic Beanstalk]]`
 3. **Select text** "deployment" → **Press Ctrl+Shift+D** → Becomes `[[d2::deployment]]`
-4. **Manually populate** Items field: "Elastic Beanstalk, deployment"
-5. Result: Fully functional drag-and-drop template
+4. **Add explanation** (optional): Fill Answer field with context or hints
+5. **Done**: Template automatically extracts "Elastic Beanstalk" and "deployment" as draggable items
 
 ✅ **AUTOMATION RESTORED**: Fixed using native Qt `selectedText()` API approach.
 
@@ -52,6 +55,7 @@ The project appears to be a legitimate educational tool focused on enhancing lea
   - **Green text**: Correct answers (show actual correct word)
   - **Red text**: Incorrect answers (show what correct answer should be, not user input)
   - **Natural flow**: Full paragraph context, not individual feedback messages
+- **Answer Section**: Optional explanation/context from Answer field displayed below answer
 
 ### Add-on Development Journey (RESOLVED):
 
@@ -75,6 +79,51 @@ Using Claude Code with Zen MCP tools, we conducted systematic investigation:
 - ✅ Fully automated "select text → press shortcut" workflow
 - ✅ Add-on button and keyboard shortcuts functional
 - ✅ Cross-platform compatibility maintained
+- ✅ Template fields updated to Question and Explain only (Session 6)
+- ❌ **ACTIVE ISSUE**: Front-side template not displaying cloze-style blanks or draggable items
+- ❌ **ACTIVE ISSUE**: Template showing literal field references instead of parsed content
+- ❌ **ACTIVE ISSUE**: Event handlers not working ("Check Answers" button non-functional)
+- ❌ **ACTIVE ISSUE**: Original UI design/styling missing or broken
+
+### Session 5 Failed Debugging Attempt (2025-07-14):
+
+#### **Issue Investigated**: Template showing literal `{{Question}}` instead of parsed content
+- **Symptoms**: Front-side card shows no cloze-style blanks, no draggable items, broken event handlers
+- **Root Cause Hypothesis**: Field references using quotes `'{{Question}}'` instead of direct `{{Question}}`
+
+#### **What We Tried**:
+1. **Systematic Debugging Plan**: Created comprehensive 5-phase debugging approach following Claude Code best practices
+2. **File Analysis**: Examined front.html, back.html, diagnostic-test.html, test-template.html
+3. **Solution Attempts**: 
+   - Changed `'{{Question}}'` to `{{Question}}` (direct field reference)
+   - Changed to template literals `` `{{Question}}` ``
+   - Updated diagnostic tests to show both old/new methods
+4. **Created Test Files**: verify-fix.html, updated diagnostic-test.html
+
+#### **Why It Failed**:
+- **Over-engineering**: Applied complex debugging methodology to potentially simple issue
+- **Assumption Error**: Assumed templates were already fixed when they weren't
+- **UI Regression**: Changes broke original styling and functionality
+- **Incomplete Testing**: Didn't verify in actual Anki environment before committing to approach
+
+#### **Lessons Learned**:
+- **Test in Real Environment First**: Always test templates in actual Anki before assuming they work
+- **Preserve Working State**: Don't modify functional code without backup/verification
+- **Incremental Changes**: Make small, testable changes rather than comprehensive rewrites
+- **UI Consistency**: Maintain styling and UX during debugging
+
+#### **Session 6 Updates (2025-07-14)**:
+- **Template Field Structure**: Updated both front.html and back.html to use only Question and Explain fields
+- **Error Handling**: Added validation for empty/missing Question field content
+- **Field References**: Fixed template literal syntax to use proper Anki field references
+- **Draggable Items**: Updated logic to extract items directly from Question field [[d1::text]] syntax
+- **Back Template**: Updated to use {{Explain}} field instead of {{Answer}}
+
+#### **Next Session Should**:
+1. **Test in Anki Environment**: Load templates in actual Anki to identify exact failure points
+2. **Debug Field Parsing**: Check if Anki is properly substituting field values
+3. **Validate JavaScript Execution**: Ensure scripts run properly in Anki's web environment
+4. **Fix Content Display**: Resolve why blanks and draggable items aren't showing
 
 ### Future Features (Not MVP):
 - Distractor items in Items field

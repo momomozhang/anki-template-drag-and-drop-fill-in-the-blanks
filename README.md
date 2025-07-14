@@ -15,7 +15,8 @@ Transform any text into an engaging learning exercise where words or phrases are
 - **Visual Feedback**: Instant success/error indicators  
 - **Cross-Platform**: Works on Anki Desktop, AnkiWeb, and mobile apps
 - **Randomization**: Shuffled item order prevents pattern memorization
-- **Flexible Input**: Support multiple blanks using pipe separator (`|`)
+- **Smart Parsing**: Automatically extracts draggable items from `[[d1::text]]` syntax
+- **Streamlined Workflow**: No manual field population required
 
 ### 💡 Use Cases
 - Language learning (vocabulary, grammar)

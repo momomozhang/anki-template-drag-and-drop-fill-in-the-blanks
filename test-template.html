@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drag-and-Drop Template Test</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Test Question with [[d1::text]] syntax -->
+<script>
+// Mock Anki field values for testing
+var mockFields = {
+    Question: "Context [[d2::left]] until [[d1::auto-compact]]: 12%",
+    Items: "", // Empty to test smart parsing
+    Explain: "This is a test explanation for the drag-and-drop template."
+};
+
+// Replace Anki field references with mock data for testing
+document.addEventListener('DOMContentLoaded', function() {
+    // Replace all {{Question}} with mock Question field
+    var content = document.body.innerHTML;
+    content = content.replace(/\{\{Question\}\}/g, mockFields.Question);
+    content = content.replace(/\{\{Items\}\}/g, mockFields.Items);
+    content = content.replace(/\{\{Explain\}\}/g, mockFields.Explain);
+    document.body.innerHTML = content;
+    
+    // Trigger the template initialization
+    if (typeof initializeStudyMode === 'function') {
+        initializeStudyMode();
+    }
+});
+</script>
+
+<!-- Front Template -->
+<div class="drag-drop-card">
+<div class="drag-drop-container">
+    <!-- Question with inline drop zones -->
+    <div class="study-question" id="study-question">
+        <!-- Will be populated by parseQuestion() -->
+    </div>
+    
+    <!-- Draggable Items -->
+    <div class="draggable-items-container">
+        <h4>Drag these items to fill the blanks:</h4>
+        <div class="draggable-items" id="draggable-items">
+            <!-- Will be populated by createDraggableItems() -->
+        </div>
+    </div>
+    
+    <!-- Controls -->
+    <div class="study-controls">
+        <button class="study-btn" id="check-answers-btn">Check Answers</button>
+        <button class="study-btn" id="show-answers-btn" style="display: none;">Show Answers</button>
+        <button class="study-btn" id="reset-btn">Reset</button>
+    </div>
+    
+    <!-- Results -->
+    <div class="study-results" id="study-results" style="display: none;">
+        <div class="score-display" id="score-display"></div>
+        <div class="feedback-messages" id="feedback-messages"></div>
+    </div>
+</div>
+
+<script src="front-template-logic.js"></script>
+</div>
+
+<hr style="margin: 40px 0;">
+
+<!-- Back Template Test -->
+<div class="drag-drop-card">
+<div class="answer-container">
+    <!-- Complete text with color-coded answers -->
+    <div class="answer-section">
+        <h3>Answer</h3>
+        <div class="answer-text" id="answer-text">
+            <!-- Will be populated by displayAnswers() -->
+        </div>
+    </div>
+    
+    <!-- Explain field (optional) -->
+    <div class="explain-section">
+        <h4>Explanation</h4>
+        <div class="explain-content">{{Explain}}</div>
+    </div>
+</div>
+
+<script>
+// Display answers with color coding
+function displayAnswers() {
+    var questionField = mockFields.Question;
+    var answerTextDiv = document.getElementById('answer-text');
+    
+    // Replace [[dN::text]] syntax with highlighted spans
+    var answerContent = questionField.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num, text) {
+        return '<span class="answer-highlight">' + text + '</span>';
+    });
+    
+    answerTextDiv.innerHTML = answerContent;
+}
+
+// Initialize answer display after field replacement
+setTimeout(function() {
+    displayAnswers();
+}, 100);
+</script>
+</div>
+
+</body>
+</html>

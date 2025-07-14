@@ -57,6 +57,12 @@ function parseQuestion() {
     // Reset study state
     studyState.correctAnswers.clear();
     
+    // Check if we have valid Question field content
+    if (!questionField || questionField.trim() === '' || questionField === '{{Question}}') {
+        studyQuestion.innerHTML = '<p style="color: #666; font-style: italic;">No question content found. Please add content to your Question field.</p>';
+        return;
+    }
+    
     // Replace [[dN::text]] syntax with inline drop zones
     var studyContent = questionField.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num, text) {
         var blankId = 'd' + num;
@@ -68,25 +74,32 @@ function parseQuestion() {
         return '<span class="inline-drop-zone" data-blank-id="' + blankId + '"></span>';
     });
     
-    // If no replacements were made, display the original content
+    // If no drag-drop syntax found, show informational message
     if (studyContent === questionField) {
-        studyContent = questionField;
+        studyContent = questionField + '<br><br><em style="color: #666;">No drag-drop blanks found. Use the add-on to create [[d1::text]] syntax.</em>';
     }
     
     studyQuestion.innerHTML = studyContent;
 }
 
-// Create draggable items from Items field
+// Create draggable items from Question field syntax
 function createDraggableItems() {
-    var itemsField = '{{Items}}';
+    var questionField = '{{Question}}';
     var draggableItems = document.getElementById('draggable-items');
     
-    // Split items by comma and create draggable elements
-    var items = itemsField.split(',').map(function(item) {
-        return item.trim();
-    }).filter(function(item) {
-        return item.length > 0;
-    });
+    // Extract items from [[dN::text]] syntax
+    var items = [];
+    var regex = /\[\[d\d+::([^\]]+)\]\]/g;
+    var match;
+    while ((match = regex.exec(questionField)) !== null) {
+        items.push(match[1].trim());
+    }
+    
+    // If no items found, show helpful message
+    if (items.length === 0) {
+        draggableItems.innerHTML = '<p style="color: #666; font-style: italic;">No draggable items found. Use the add-on to create [[d1::text]] syntax.</p>';
+        return;
+    }
     
     // Shuffle items
     items = shuffleArray(items);

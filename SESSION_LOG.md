@@ -130,3 +130,92 @@ Great problem-solving session showcasing research-driven debugging! 🚀
 **The automation was always possible** - the original implementation took the wrong architectural approach. Qt provides exactly the APIs needed, but they must be accessed through Python, not JavaScript. This demonstrates the critical importance of systematic analysis and research in complex debugging scenarios.
 
 **Project Status**: 🎉 **COMPLETE** - Both templates and automation working perfectly!
+
+## Session 5 - July 14, 2025
+
+### 🔧 **Template Issue Resolution & Requirements Refinement**
+
+### **Issue Discovery Phase**
+- **Template Rendering Problem**: After CSS scoping fixes, drag-and-drop cards showed empty content despite working automation
+- **Root Cause Investigation**: Used Zen MCP research to analyze potential causes (workflow gap vs technical issue)
+- **User Feedback**: Manually populating Items field did not resolve the issue, indicating technical problem
+
+### **Requirements Clarification & Redesign**
+- **Streamlined Field Structure**: Simplified from Question + Items + Notes + Extra → **Question + Explain only**
+- **Automatic Item Generation**: Template should auto-extract draggable items from `[[d1::text]]` syntax 
+- **No Manual Field Population**: Users shouldn't need to populate separate Items field manually
+- **Smart Parsing**: Template intelligence should handle all draggable item creation automatically
+
+### ✅ **Documentation Updates Completed**
+- **CLAUDE.md**: Updated field structure, workflow, and technical specifications
+- **README.md**: Added smart parsing and streamlined workflow features
+- **Add-on README**: Updated usage instructions and compatibility requirements
+- **All Documentation**: Reflects new Question + Explain field structure with automatic item generation
+
+### 🎯 **New Simplified Workflow**
+1. **Create Content**: Paste text into Question field
+2. **Create Blanks**: Select text → Press Cmd+Shift+D → Creates `[[d1::text]]` syntax
+3. **Add Context** (optional): Fill Explain field with hints/context
+4. **Done**: Template automatically extracts and creates draggable items
+
+### 📋 **Next Phase: Technical Implementation**
+- **Template Logic Update**: Modify JavaScript to auto-extract items from Question field syntax
+- **Field Structure**: Remove Items, Notes, Extra fields from templates
+- **CSS/JavaScript**: Ensure new field structure works with existing drag-and-drop functionality
+- **Testing**: Verify complete automation workflow functions as designed
+
+### 🎯 **Target User Experience**
+**Complete automation**: User creates blanks with add-on, template handles everything else automatically without any manual field population or configuration required.
+
+## Session 6 - July 14, 2025 (Later)
+
+### ❌ **Failed Template Debugging Attempt**
+
+### **Issue Investigated**
+- **Problem**: Front-side template showing literal `{{Question}}` instead of parsed content
+- **Symptoms**: No cloze-style blanks, no draggable items, broken event handlers, missing UI styling
+- **User Report**: Template completely non-functional in actual Anki environment
+
+### **Approach Taken**
+1. **Followed Claude Code Best Practices**: Used systematic Explore → Plan → Code → Commit methodology
+2. **Comprehensive Planning**: Created detailed 5-phase debugging plan with proper analysis
+3. **Deep File Analysis**: Examined all template files for field reference patterns
+4. **Multiple Solution Attempts**: Tried various approaches to fix field processing
+
+### **What We Tried**
+- **Direct Field References**: Changed `'{{Question}}'` to `{{Question}}` (unquoted)
+- **Template Literals**: Changed to `` `{{Question}}` `` for safer character handling
+- **Diagnostic Tests**: Created comprehensive test files to compare methods
+- **Hidden DOM Method**: Initially thought templates were using this approach correctly
+
+### **Why It Failed**
+- **Over-engineering**: Applied complex debugging methodology to potentially simple issue
+- **False Assumptions**: Assumed templates were working when they weren't functioning in Anki
+- **UI Regression**: Changes broke original styling and visual design
+- **Incomplete Testing**: Made changes without verifying in actual Anki environment first
+- **Scope Creep**: Created multiple test files instead of focusing on core issue
+
+### **Lessons Learned**
+- **Test in Real Environment First**: Always validate templates in actual Anki before making changes
+- **Preserve Working State**: Don't modify functional code without proper backup/verification
+- **Incremental Changes**: Make small, testable modifications rather than comprehensive rewrites
+- **UI Consistency**: Maintain styling and UX during debugging process
+- **Simple Before Complex**: Try simple solutions before applying complex methodologies
+
+### **Session Outcome**
+- **Status**: ❌ All changes reverted, templates back to original state
+- **Documentation**: Comprehensive record of failed attempt with lessons learned
+- **Current Issues**: Front-side template still not working, original problems persist
+
+### **Next Session Guidelines**
+1. **Start with Minimal Testing**: Test current templates in Anki to identify exact failure points
+2. **Isolate Issues**: Separate field parsing from UI styling from event handling
+3. **Preserve What Works**: Only modify broken parts, keep working components intact
+4. **Validate Each Change**: Test every modification immediately in Anki environment
+5. **Simple Solutions First**: Try basic fixes before complex debugging workflows
+
+### **Current Active Issues**
+- ❌ Front-side template not displaying parsed content or draggable items
+- ❌ Event handlers not working ("Check Answers" button non-functional)  
+- ❌ Original UI design/styling missing or broken
+- ❌ Templates may need fundamental architecture review
