@@ -26,19 +26,19 @@
     </div>
 </div>
 
-<script>
-// Global state for drag-and-drop functionality
-var studyState = {
-    correctAnswers: new Map(),
-    userAnswers: new Map(),
-    isChecked: false,
-    score: 0
-};
+{{#Question}}
+<!-- Store field content in hidden div -->
+<div id="question-data" style="display: none;">{{Question}}</div>
 
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    initializeStudyMode();
-});
+<script>
+(function() {
+    // Global state for drag-and-drop functionality
+    var studyState = {
+        correctAnswers: new Map(),
+        userAnswers: new Map(),
+        isChecked: false,
+        score: 0
+    };
 
 // Initialize study mode
 function initializeStudyMode() {
@@ -51,7 +51,8 @@ function initializeStudyMode() {
 
 // Parse question field and create inline drop zones
 function parseQuestion() {
-    var questionField = '{{Question}}';
+    // Get field content from hidden div instead of field substitution
+    var questionField = document.getElementById('question-data').textContent;
     var studyQuestion = document.getElementById('study-question');
     
     // Reset study state
@@ -84,7 +85,8 @@ function parseQuestion() {
 
 // Create draggable items from Question field syntax
 function createDraggableItems() {
-    var questionField = '{{Question}}';
+    // Get field content from hidden div
+    var questionField = document.getElementById('question-data').textContent;
     var draggableItems = document.getElementById('draggable-items');
     
     // Extract items from [[dN::text]] syntax
@@ -365,4 +367,10 @@ function resetStudy() {
     // Reset state and UI
     resetStudyState();
 }
+
+// Initialize immediately - no event waiting
+initializeStudyMode();
+
+})();
 </script>
+{{/Question}}

@@ -31,10 +31,22 @@ Transform any text into an engaging learning exercise where words or phrases are
 
 **The project is now complete** - both interactive templates and automation work perfectly.
 
-### 🔧 **Automation Fix Summary**
-**Issue Solved**: The original add-on failed because it used JavaScript selection detection in QtWebEngine, which has fundamental limitations. Through systematic analysis using Claude Code and Zen MCP tools, we discovered that Qt provides native `selectedText()` APIs that completely bypass JavaScript limitations.
+### 🔧 **Technical Solutions Summary**
 
-**Solution**: Replaced 500+ lines of complex JavaScript selection monitoring with simple native Qt API calls:
-```python
-selected_text = editor.web.selectedText()  # Works reliably
-```
+#### **Automation Fix (Session 4)**
+**Problem**: 500+ lines of JavaScript selection monitoring failed in QtWebEngine  
+**Solution**: Native Qt APIs using `editor.web.selectedText()`  
+**Result**: Reliable text selection and blank creation with Ctrl+Shift+D
+
+#### **Template Rendering Fix (Session 6)**
+**Problem**: Complete front-side template failure - blank display, no content  
+**Root Causes**: DOMContentLoaded timing + field substitution + variable scope issues  
+**Solution**: Multi-part fix:
+- IIFE pattern for proper variable scoping
+- Conditional rendering `{{#Question}}...{{/Question}}`
+- Hidden div pattern for reliable field access
+- Immediate execution without DOM events
+
+**Result**: Fully functional interactive template with cloze-style blanks and draggable items
+
+**Key Insight**: Anki's web environment requires specialized patterns different from standard web development.
