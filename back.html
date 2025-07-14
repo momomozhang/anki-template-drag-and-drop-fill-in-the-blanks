@@ -1,0 +1,44 @@
+<div class="answer-container">
+    <!-- Complete text with color-coded answers -->
+    <div class="answer-section">
+        <h3>Answer</h3>
+        <div class="answer-text" id="answer-text">
+            <!-- Will be populated by showAnswers() -->
+        </div>
+    </div>
+    
+    <!-- Additional fields (optional) -->
+    {{#Notes}}
+    <div class="notes-section">
+        <h4>Notes</h4>
+        <div class="notes-content">{{Notes}}</div>
+    </div>
+    {{/Notes}}
+    
+    {{#Extra}}
+    <div class="extra-section">
+        <h4>Extra Information</h4>
+        <div class="extra-content">{{Extra}}</div>
+    </div>
+    {{/Extra}}
+</div>
+
+<script>
+// Initialize answer display when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    displayAnswers();
+});
+
+// Display answers with color coding
+function displayAnswers() {
+    var questionField = '{{Question}}';
+    var answerTextDiv = document.getElementById('answer-text');
+    
+    // Replace [[dN::text]] syntax with highlighted spans
+    var answerContent = questionField.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num, text) {
+        return '<span class="answer-highlight">' + text + '</span>';
+    });
+    
+    answerTextDiv.innerHTML = answerContent;
+}
+</script>
