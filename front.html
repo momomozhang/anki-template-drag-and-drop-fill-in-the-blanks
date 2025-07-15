@@ -14,16 +14,10 @@
     
     <!-- Controls -->
     <div class="study-controls">
-        <button class="study-btn" id="check-answers-btn">Check Answers</button>
-        <button class="study-btn" id="show-answers-btn" style="display: none;">Show Answers</button>
+        <button class="study-btn" id="show-answers-btn">Show Answers</button>
         <button class="study-btn" id="reset-btn">Reset</button>
     </div>
     
-    <!-- Results -->
-    <div class="study-results" id="study-results" style="display: none;">
-        <div class="score-display" id="score-display"></div>
-        <div class="feedback-messages" id="feedback-messages"></div>
-    </div>
 </div>
 
 {{#Question}}
@@ -35,9 +29,7 @@
     // Global state for drag-and-drop functionality
     var studyState = {
         correctAnswers: new Map(),
-        userAnswers: new Map(),
-        isChecked: false,
-        score: 0
+        userAnswers: new Map()
     };
 
 // Initialize study mode
@@ -134,16 +126,6 @@ function shuffleArray(array) {
 // Reset study state
 function resetStudyState() {
     studyState.userAnswers.clear();
-    studyState.isChecked = false;
-    studyState.score = 0;
-    
-    var studyResults = document.getElementById('study-results');
-    var checkAnswersBtn = document.getElementById('check-answers-btn');
-    var showAnswersBtn = document.getElementById('show-answers-btn');
-    
-    studyResults.style.display = 'none';
-    checkAnswersBtn.style.display = 'inline-block';
-    showAnswersBtn.style.display = 'none';
 }
 
 // Attach drag and drop events
@@ -171,11 +153,9 @@ function attachDragAndDropEvents() {
 
 // Attach control events
 function attachControlEvents() {
-    var checkAnswersBtn = document.getElementById('check-answers-btn');
     var showAnswersBtn = document.getElementById('show-answers-btn');
     var resetBtn = document.getElementById('reset-btn');
     
-    checkAnswersBtn.addEventListener('click', checkAnswers);
     showAnswersBtn.addEventListener('click', showAnswers);
     resetBtn.addEventListener('click', resetStudy);
 }
@@ -255,68 +235,33 @@ function handleDropZoneClick(e) {
     }
 }
 
-// Check answers
-function checkAnswers() {
-    if (studyState.userAnswers.size === 0) {
-        alert('Please fill in some blanks before checking answers.');
-        return;
-    }
-    
-    studyState.isChecked = true;
-    studyState.score = 0;
-    var feedback = [];
-    
-    var studyQuestion = document.getElementById('study-question');
-    
-    // Check each answer
-    studyState.correctAnswers.forEach(function(correctAnswer, blankId) {
-        var userAnswer = studyState.userAnswers.get(blankId);
-        var dropZone = studyQuestion.querySelector('[data-blank-id="' + blankId + '"]');
-        
-        if (userAnswer === correctAnswer) {
-            studyState.score++;
-            dropZone.classList.add('correct');
-            feedback.push({
-                type: 'correct',
-                message: '"' + correctAnswer + '" is correct!'
-            });
-        } else {
-            dropZone.classList.add('incorrect');
-            if (userAnswer) {
-                feedback.push({
-                    type: 'incorrect',
-                    message: '"' + userAnswer + '" is incorrect. The correct answer is "' + correctAnswer + '".'
-                });
-            } else {
-                feedback.push({
-                    type: 'incorrect',
-                    message: 'Blank ' + blankId + ' is empty. The correct answer is "' + correctAnswer + '".'
-                });
-            }
-        }
-    });
-    
-    // Display results
-    displayStudyResults(feedback);
-    
-    // Update button states
-    var checkAnswersBtn = document.getElementById('check-answers-btn');
-    var showAnswersBtn = document.getElementById('show-answers-btn');
-    checkAnswersBtn.style.display = 'none';
-    showAnswersBtn.style.display = 'inline-block';
-}
 
 // Show answers
 function showAnswers() {
     var studyQuestion = document.getElementById('study-question');
     var draggableItems = document.getElementById('draggable-items');
     
-    // Fill all blanks with correct answers
+    // Process each blank with appropriate color coding
     studyState.correctAnswers.forEach(function(correctAnswer, blankId) {
         var dropZone = studyQuestion.querySelector('[data-blank-id="' + blankId + '"]');
+        var userAnswer = studyState.userAnswers.get(blankId);
+        
+        // Set the correct text
         dropZone.textContent = correctAnswer;
-        dropZone.classList.remove('filled', 'incorrect');
-        dropZone.classList.add('correct');
+        
+        // Apply appropriate styling based on user's original answer
+        dropZone.classList.remove('filled', 'correct', 'incorrect', 'auto-filled');
+        
+        if (!userAnswer) {
+            // Empty blank - show in grey
+            dropZone.classList.add('auto-filled');
+        } else if (userAnswer === correctAnswer) {
+            // User was correct - show in green
+            dropZone.classList.add('correct');
+        } else {
+            // User was incorrect - show in pink/red
+            dropZone.classList.add('incorrect');
+        }
     });
     
     // Mark all items as used
@@ -326,46 +271,17 @@ function showAnswers() {
     }
 }
 
-// Display study results
-function displayStudyResults(feedback) {
-    var totalQuestions = studyState.correctAnswers.size;
-    var percentage = Math.round((studyState.score / totalQuestions) * 100);
-    
-    var scoreDisplay = document.getElementById('score-display');
-    scoreDisplay.innerHTML = '<h3>Score: ' + studyState.score + '/' + totalQuestions + ' (' + percentage + '%)</h3>';
-    
-    var feedbackMessages = document.getElementById('feedback-messages');
-    feedbackMessages.innerHTML = feedback.map(function(item) {
-        return '<div class="feedback-item ' + item.type + '">' +
-               '<span class="feedback-icon">' + (item.type === 'correct' ? '✅' : '❌') + '</span>' +
-               '<span>' + item.message + '</span>' +
-               '</div>';
-    }).join('');
-    
-    var studyResults = document.getElementById('study-results');
-    studyResults.style.display = 'block';
-}
 
 // Reset study
 function resetStudy() {
-    var studyQuestion = document.getElementById('study-question');
-    var draggableItems = document.getElementById('draggable-items');
+    // Re-initialize entire study mode to restore original state
+    initializeStudyMode();
     
-    // Clear all drop zones
-    var dropZones = studyQuestion.querySelectorAll('.inline-drop-zone');
-    for (var i = 0; i < dropZones.length; i++) {
-        dropZones[i].textContent = '';
-        dropZones[i].classList.remove('filled', 'correct', 'incorrect');
+    // Ensure draggable container is visible
+    var draggableItemsContainer = document.getElementById('draggable-items-container');
+    if (draggableItemsContainer) {
+        draggableItemsContainer.style.display = 'block';
     }
-    
-    // Reset all draggable items
-    var items = draggableItems.querySelectorAll('.draggable-item');
-    for (var i = 0; i < items.length; i++) {
-        items[i].classList.remove('used');
-    }
-    
-    // Reset state and UI
-    resetStudyState();
 }
 
 // Initialize immediately - no event waiting
