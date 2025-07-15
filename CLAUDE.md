@@ -1,188 +1,81 @@
-# Project Understanding
+# Anki Drag-and-Drop Template Project
 
-This is an Anki flashcard template project that creates interactive drag-and-drop fill-in-the-blank exercises. The project serves as a showcase of Claude Code's development capabilities.
+## Project Overview
 
-## Key Understanding:
-- It's a complete educational tool built entirely with Claude Code assistance
-- Creates interactive flashcards where users drag words/phrases to fill blanks in sentences
-- Uses HTML5 drag-and-drop API for cross-platform compatibility (Anki Desktop, AnkiWeb, mobile)
-- Features visual feedback, randomization, and flexible input formatting
-- Targets various learning domains (language, medical, history, coding)
+This is an interactive Anki flashcard template that creates drag-and-drop fill-in-the-blank exercises. Built entirely with Claude Code assistance, it demonstrates sophisticated AI collaboration and solves a real need for Anki users seeking more interactive learning experiences.
 
-## Primary Purpose:
-Demonstrate Claude Code's ability to build complete, functional projects while solving a real need for Anki users who want more interactive learning experiences.
+### Key Features:
+- **Interactive Learning**: Drag words/phrases to fill blanks in sentences
+- **Cross-Platform**: HTML5 drag-and-drop API works on Anki Desktop, AnkiWeb, and mobile
+- **Visual Feedback**: Instant success/error indicators with color coding
+- **Randomization**: Shuffled item order prevents pattern memorization
+- **Automation**: One-click blank creation with auto-incrementing
+- **Versatile**: Supports language learning, medical terminology, history, coding practice
 
-The project appears to be a legitimate educational tool focused on enhancing learning through interactive exercises.
+### Technical Architecture:
+- **Frontend**: HTML5 drag-and-drop with JavaScript state management
+- **Backend**: Python Anki add-on using native Qt APIs
+- **Template**: CSS-styled responsive interface
+- **Compatibility**: Cross-platform Anki environment support
 
-## Detailed Requirements (Established Session 2)
+## System Specifications
 
-### Core User Experience
-- **Content Creation**: User copies/pastes a paragraph into Question field
-- **Blank Creation**: User selects text portions and clicks a Cloze-style button to create inline blanks
-- **Inline Blanks**: Blanks appear within sentence flow (not as separate drop zones)
-- **Study Experience**: Draggable items below text for filling blanks
+### Field Structure
+- **Question Field**: Contains text with `[[d1::selected_text]]` syntax
+- **Explain Field**: Optional explanations/context for answers
+- **Single-Card System**: One interactive card showing all blanks simultaneously
 
-### Technical Specifications
+### User Workflow
+1. **Content Creation**: Paste text into Question field
+2. **Blank Creation**: Select text → Press `Ctrl+Shift+D` → Creates `[[d1::text]]`
+3. **Auto-increment**: Automatically detects existing blanks and increments counter
+4. **Study**: Drag items to fill underlined gaps within text
+5. **Feedback**: Color-coded results with optional explanations
 
-#### Anki Field Structure:
-- **Question Field**: Original text with `[[d1::selected_text]]` syntax (d = drag-and-drop)
-- **Answer Field**: Simple explanation/notes for the answer
-- ~~**Items Field**~~: **REMOVED** - Template automatically extracts items from Question field syntax
-- ~~**Notes Field**~~: **REMOVED** - Replaced with simpler Answer field
-- ~~**Extra Field**~~: **REMOVED** - Replaced with simpler Answer field
-- ~~**Explain Field**~~: **REMOVED** - Replaced with Answer field
+### Study Experience
+- **Front**: "You simply upload your code and _________ automatically handles the _________"
+- **Interaction**: Drag items to fill underlined gaps
+- **Feedback**: Green (correct) / Red (incorrect) with full context
+- **Answer**: Complete paragraph with color coding + optional explanation
 
-#### Editor Interface:
-- **Button**: ✅ **WORKING** - Cloze-style button for creating blanks using native Qt APIs
-- **Keyboard Shortcut**: `Ctrl+Shift+D` (or `Cmd+Shift+D` on Mac) for quick blank creation
-- **Auto-increment**: ✅ **FUNCTIONAL** - Automatically detects existing blanks and increments counter
-- **Smart Parsing**: ✅ **AUTOMATIC** - Template extracts draggable items directly from `[[d1::text]]` syntax
+## Development Journey
 
-#### User Workflow Example (FULLY AUTOMATED PROCESS):
-1. Paste: "You simply upload your code and Elastic Beanstalk automatically handles the deployment"
-2. **Select text** "Elastic Beanstalk" → **Press Ctrl+Shift+D** → Becomes `[[d1::Elastic Beanstalk]]`
-3. **Select text** "deployment" → **Press Ctrl+Shift+D** → Becomes `[[d2::deployment]]`
-4. **Add explanation** (optional): Fill Answer field with context or hints
-5. **Done**: Template automatically extracts "Elastic Beanstalk" and "deployment" as draggable items
+### Add-on Automation (Sessions 1-4)
+**Challenge**: Text selection automation in Anki's QtWebEngine editor
+- **Problem**: 500+ lines of JavaScript selection monitoring failed
+- **Research**: Systematic investigation using Claude Code + Zen MCP tools
+- **Solution**: Native Qt APIs (`editor.web.selectedText()`) instead of JavaScript
+- **Result**: ✅ **Working automation** with `Ctrl+Shift+D` shortcut
 
-✅ **AUTOMATION RESTORED**: Fixed using native Qt `selectedText()` API approach.
+### Template Rendering (Sessions 5-6)
+**Challenge**: Complete front-side template rendering failure
+- **Problem**: Blank display, no content, JavaScript execution issues
+- **Solutions**: Field reference fixes, DOMContentLoaded replacements
+- **Breakthrough**: IIFE + conditional rendering + hidden div pattern
+- **Result**: ✅ **Fully functional** drag-and-drop template
 
-#### Study Experience:
-- **Display**: "You simply upload your code and _________ automatically handles the _________"
-- **Interaction**: Drag items to fill underlined gaps within text
-- **Appearance**: Blanks show as underlined gaps (like Cloze cards)
-- **Answer Section**: Show complete original paragraph with color coding:
-  - **Green text**: Correct answers (show actual correct word)
-  - **Red text**: Incorrect answers (show what correct answer should be, not user input)
-  - **Natural flow**: Full paragraph context, not individual feedback messages
-- **Answer Section**: Optional explanation/context from Answer field displayed below answer
+### Multi-Card Feature Research (Session 7)
+**Initial Goal**: Multi-card generation system (like cloze deletion)
+- **Research**: Extensive technical analysis using Claude Code + Zen MCP
+- **Findings**: Complex add-on preprocessing, dual-field architecture required
+- **Decision**: ❌ **Feature dropped** - Complexity too high for benefit
+- **Outcome**: Single-card system provides excellent functionality with simpler UX
 
-### Add-on Development Journey (RESOLVED):
+## Current Status
 
-#### **Original Challenges (Sessions 1-2):**
-- **Automated text selection**: Anki's QtWebEngine editor doesn't expose selections to JavaScript
-- **Button automation**: Multiple API approaches failed due to selection clearing behavior  
-- **Event monitoring**: Standard web APIs (`selectionchange`, `mouseup`) don't work in Anki context
+### ✅ Completed Features
+- **Automation**: Fully functional `Ctrl+Shift+D` shortcut for blank creation
+- **Templates**: Interactive drag-and-drop interface with visual feedback
+- **Cross-Platform**: Works on Anki Desktop, AnkiWeb, and mobile
+- **User Experience**: Streamlined workflow from content creation to study
 
-#### **Research & Analysis (Session 3):**
-Using Claude Code with Zen MCP tools, we conducted systematic investigation:
-- **Hypothesis**: JavaScript selection detection is fundamentally flawed in QtWebEngine
-- **Discovery**: Qt provides native `selectedText()` property that bypasses JavaScript entirely
-- **Architecture Analysis**: Other Anki developers successfully use `editor.web.selectedText()`
-
-#### **Solution Implementation (Session 3):**
-- **Root Cause**: Wrong architectural approach (JavaScript vs native Qt APIs)
-- **Fix**: Replaced 500+ lines of JavaScript with simple `editor.web.selectedText()` calls
-- **Result**: ✅ **WORKING AUTOMATION** - reliable text selection and blank creation
-
-### Current Status:
-- ✅ Fully automated "select text → press shortcut" workflow
-- ✅ Add-on button and keyboard shortcuts functional
-- ✅ Cross-platform compatibility maintained
-- ✅ Template fields updated to Question and Explain only (Session 6)
-- ✅ **RESOLVED**: Front-side template fully functional with drag-and-drop interface
-- ✅ **RESOLVED**: JavaScript execution working with IIFE and conditional rendering
-- ✅ **RESOLVED**: Field substitution working with hidden div pattern
-- ✅ **COMPLETE**: Template displays cloze-style blanks and draggable items correctly
-
-### Current Template Issue (Sessions 5-6):
-
-#### **Actual Problem**: Complete front-side rendering failure
-- **Symptoms**: 
-  - Front-side Anki card completely blank/empty
-  - No question text displayed (not even raw field content)
-  - No cloze-style blanks or underlined gaps
-  - Draggable items section completely empty
-  - Only basic HTML structure/CSS loads, no dynamic content
-- **Root Cause**: JavaScript parsing functions not executing in Anki environment
-
-#### **Previous Incorrect Assumptions**:
-- **Session 5**: Thought issue was field reference syntax (`'{{Question}}'` vs `{{Question}}`)
-- **Session 6**: Assumed field structure was the problem
-- **Reality**: Template isn't rendering any content at all, indicating JavaScript execution failure
-
-#### **What We've Tried**:
-1. **Field Reference Changes**: Multiple attempts to fix field syntax
-2. **Field Structure Updates**: Reduced to Question and Explain fields only
-3. **Template Validation**: Added error handling for empty fields
-4. **Diagnostic Files**: Created test files (not tested in actual Anki)
-
-#### **What We Haven't Tried**:
-- **Testing in actual Anki environment** to confirm JavaScript execution
-- **Debugging JavaScript failures** in Anki's web environment
-- **Checking if field values are being substituted at all**
-- **Validating basic HTML/CSS rendering** separately from JavaScript
-
-#### **Session 6 Updates (2025-07-14)**:
-- **Template Field Structure**: Updated both front.html and back.html to use only Question and Explain fields
-- **Error Handling**: Added validation for empty/missing Question field content
-- **Field References**: Fixed template literal syntax to use proper Anki field references
-- **Issue Clarification**: Discovered template is completely blank, not showing field reference issues
-- **DOMContentLoaded Fix**: Implemented IIFE with conditional rendering and immediate execution
-
-#### **Session 6 Test Results**:
-**Fix Applied**: Version 2 - Conditional field rendering with immediate execution
-- Wrapped JavaScript in `{{#Question}}...{{/Question}}` conditional
-- Replaced `DOMContentLoaded` with immediate `initializeStudyMode()` call
-- Used IIFE pattern `(function() {...})()` to avoid variable declaration issues
-
-**Test Results**:
-- ✅ **JavaScript Execution**: Fixed - script now runs (draggable items section appears)
-- ✅ **Variable Declaration**: Fixed - IIFE pattern prevents scope issues
-- ✅ **Conditional Rendering**: Works - template only renders when Question field has content
-- ✅ **Field Substitution**: Fixed - hidden div pattern enables reliable field access
-- ✅ **Content Display**: Working - displays cloze-style blanks and draggable items correctly
-
-**Key Discovery**: Template-level conditionals (`{{#Question}}`) work, but JavaScript-level field substitution (`'{{Question}}'`) doesn't work within conditional blocks. **Solution**: Use hidden div for field storage.
-
-#### **Final Working Solution**:
-**Pattern**: Hidden div + IIFE + conditional rendering + immediate execution
-```html
-{{#Question}}
-<div id="question-data" style="display: none;">{{Question}}</div>
-<script>
-(function() {
-    var questionField = document.getElementById('question-data').textContent;
-    // JavaScript processes actual field content successfully
-})();
-</script>
-{{/Question}}
-```
-
-**Why This Works**:
-- **Template Engine**: Substitutes `{{Question}}` in hidden div before JavaScript runs
-- **JavaScript Access**: Reads actual field content via `textContent` DOM property
-- **Clean Separation**: Template engine handles substitution, JavaScript handles processing
-- **Proven Pattern**: Hidden div approach is standard in successful Anki templates
-
-#### **Session 6 - BREAKTHROUGH SUCCESS**:
-
-**Problem Solved**: Complete template rendering failure (blank front-side)
-**Root Causes Identified**:
-1. **DOMContentLoaded not firing**: Anki's long-running webpage breaks traditional DOM events
-2. **Field substitution timing**: JavaScript-level field references don't work in conditional blocks
-3. **Variable declaration issues**: Global scope variables need IIFE wrapping
-
-**Solution Implemented**: Multi-part fix addressing all root causes
-1. **IIFE Pattern**: `(function() {...})()` for proper variable scoping
-2. **Conditional Rendering**: `{{#Question}}...{{/Question}}` ensures content exists
-3. **Immediate Execution**: Removed `DOMContentLoaded`, called `initializeStudyMode()` directly
-4. **Hidden Div Pattern**: `<div id="question-data" style="display: none;">{{Question}}</div>` for reliable field access
-
-**Result**: ✅ **FULLY FUNCTIONAL** drag-and-drop template with:
-- Cloze-style blanks displaying correctly
-- Draggable items extracted from Question field
-- Working event handlers and interactive functionality
-- Cross-platform compatibility maintained
-
-**Next Phase**: Template is now complete and ready for real-world use and testing
-
-### Future Features (Ready for development):
+### 🔄 Future Enhancement Opportunities
 - Distractor items functionality
-- Multiple instance selection  
 - Advanced formatting options
 - UI/UX improvements
 - Performance optimizations
+
+**Project Status**: Complete and fully functional single-card drag-and-drop system.
 
 # AI Collaboration Methodology Documentation
 
