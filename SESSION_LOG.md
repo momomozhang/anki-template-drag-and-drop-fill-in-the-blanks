@@ -219,3 +219,41 @@ Great problem-solving session showcasing research-driven debugging! 🚀
 - ❌ Event handlers not working ("Check Answers" button non-functional)  
 - ❌ Original UI design/styling missing or broken
 - ❌ Templates may need fundamental architecture review
+
+## Session 8 - July 15, 2025
+
+### 🔧 **Scoring Feature Removal Decision**
+
+### **Issue Discovery**
+- **Problem**: Scoring calculation bug discovered (3 blanks, 1 correct showing 0% instead of 33%)
+- **Investigation**: Used Zen MCP debug tool to analyze scoring logic in `checkAnswers()` function
+- **Root Cause**: Complex whitespace handling between stored answers and dragged items, plus regex parsing limitations
+
+### **Strategic Analysis**
+- **Complexity vs. Benefit**: Scoring feature debugging revealed intricate edge cases and maintenance burden
+- **User Value Assessment**: Core learning happens through drag-and-drop interaction, not percentage scores
+- **UX Simplification**: Removing scoring eliminates user confusion and technical complexity
+
+### **Implementation Decision**
+- **Removed**: "Check Answers" button and percentage scoring calculations
+- **Kept**: "Show Answers" button with existing color-coded feedback system
+- **Result**: Simplified workflow - drag items → show answers → visual feedback through colors
+
+### **Technical Changes**
+- **Reverted**: Attempted `.trim()` whitespace fix
+- **Documentation**: Updated CLAUDE.md to reflect new simplified workflow
+- **User Experience**: Cleaner interface, fewer edge cases, maintained core learning value
+
+### **Outcome**
+✅ **Strategic Feature Removal**: Eliminated complex scoring system in favor of simple color-coded feedback
+✅ **Simplified UX**: Users get clear visual feedback without scoring complexity
+✅ **Reduced Maintenance**: Fewer edge cases and technical debt going forward
+
+### **Color-Coding Feature Achievement**
+✅ **Issue Resolution**: Fixed broken color-coding logic where all answers showed as green
+✅ **Intelligent Feedback**: Implemented three-tier color system:
+- **Green**: User-placed correct answers (validates learning success)
+- **Red**: User-placed incorrect answers (highlights mistakes for review)
+- **Grey**: Auto-filled correct answers for empty blanks (distinguishes from user input)
+✅ **Technical Implementation**: Version 1 approach with inline comparison logic in `showAnswers()` function
+✅ **User Experience**: Preserved educational value while maintaining interface simplicity

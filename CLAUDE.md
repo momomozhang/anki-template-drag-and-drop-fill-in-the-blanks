@@ -7,7 +7,7 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 ### Key Features:
 - **Interactive Learning**: Drag words/phrases to fill blanks in sentences
 - **Cross-Platform**: HTML5 drag-and-drop API works on Anki Desktop, AnkiWeb, and mobile
-- **Visual Feedback**: Instant success/error indicators with color coding
+- **Visual Feedback**: Color-coded answers when revealing solutions
 - **Randomization**: Shuffled item order prevents pattern memorization
 - **Automation**: One-click blank creation with auto-incrementing
 - **Versatile**: Supports language learning, medical terminology, history, coding practice
@@ -30,13 +30,16 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 2. **Blank Creation**: Select text → Press `Ctrl+Shift+D` → Creates `[[d1::text]]`
 3. **Auto-increment**: Automatically detects existing blanks and increments counter
 4. **Study**: Drag items to fill underlined gaps within text
-5. **Feedback**: Color-coded results with optional explanations
+5. **Show Answers**: Click "Show Answers" to see correct answers with color coding
 
 ### Study Experience
 - **Front**: "You simply upload your code and _________ automatically handles the _________"
 - **Interaction**: Drag items to fill underlined gaps
-- **Feedback**: Green (correct) / Red (incorrect) with full context
-- **Answer**: Complete paragraph with color coding + optional explanation
+- **Show Answers**: Click button to reveal correct answers with intelligent color coding:
+  - **Green**: User-placed correct answers
+  - **Red**: User-placed incorrect answers  
+  - **Grey**: Auto-filled correct answers for empty blanks
+- **Answer**: Complete paragraph with color-coded feedback + optional explanation
 
 ## Development Journey
 
