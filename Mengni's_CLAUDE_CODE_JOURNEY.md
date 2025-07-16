@@ -181,6 +181,28 @@ Effective AI collaboration requires treating the AI agent as a skilled partner r
 
 **Meta-Learning**: Effective AI collaboration requires treating UI redesign as strategic product evolution rather than simple restyling. The ability to maintain functional integrity while modernizing appearance demonstrates mature AI partnership skills.
 
+## Session 11: Diagnostic Debugging Methodology
+
+**Challenge**: Formatting preservation attempt failed catastrophically - both templates showed "No question content found"
+
+**Initial Mistake**: Attempted complex DOM manipulation (TreeWalker + fragment replacement) without understanding why simpler approaches failed
+
+**Breakthrough Learning**: When hitting implementation walls, use systematic diagnostic debugging instead of trying new approaches blindly
+
+**Diagnostic Process**:
+1. **Version 1**: Content access comparison - revealed HTML formatting was available (121 character difference)
+2. **Key Insight**: Problem wasn't content access but implementation approach
+3. **Version 3**: Minimal HTML processing with fallback - successful implementation
+
+**Critical Methodology Insight**: 
+- **DON'T**: Try different complex solutions when one fails
+- **DO**: Ask Claude to create diagnostic code to pinpoint the root issue
+- **Result**: Saved time, avoided frustration, achieved successful implementation
+
+**Technical Success**: HTML formatting preservation implemented with dual processing approach - maintains working logic while adding enhancement layer
+
+**Meta-Learning**: Diagnostic debugging transforms blocked development into systematic problem-solving. When stuck, step back and diagnose rather than trying more complex solutions.
+
 ---
 
 *This document serves as both a methodology showcase and a living example of how professional AI collaboration can enhance development outcomes while maintaining human agency and oversight.*
