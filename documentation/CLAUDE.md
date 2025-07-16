@@ -140,6 +140,24 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
   - **Integration**: Seamlessly works with existing dual processing architecture
 - **Status**: ✅ **Successfully Implemented**
 
+### ❌ Simplified Syntax Implementation Attempt (Session 13)
+**Feature Request**: Simplify `[[d1::text]]` syntax to `[[d::text]]` format
+- **Goal**: Remove unnecessary numbering since only one card is generated, simplify user experience
+- **Rationale**: Numbers (d1, d2, d3) serve no functional purpose in single-card system
+- **Approach Chosen**: Approach 1 (Simple Replacement) - Breaking change implementation
+- **Implementation Attempt**: 
+  - **Add-on**: Removed counter logic, generate `[[d::{selected_text}]]`
+  - **Front template**: Updated all regex patterns to `/\[\[d::([^\]]+)\]\]/g` with position-based ID generation
+  - **Back template**: Updated regex to `/\[\[d::([^\]]+)\]\]/g`
+- **Critical Issue Discovered**: 
+  - **Breaking Change Problem**: Existing cards with `[[d1::text]]` syntax became unusable
+  - **Template Failure**: Front template shows "No question content found" 
+  - **User Impact**: All existing user content would require manual migration
+- **Root Cause**: Approach 1 creates breaking change requiring all existing cards to be updated
+- **Lesson Learned**: Backward compatibility is essential for existing user content
+- **Status**: ❌ **Failed Implementation - Reverted**
+- **Next Steps**: Consider Approach 2 (Backward Compatibility) to support both syntaxes
+
 ### ✅ Formatting Preservation Implementation (Session 11)
 **Challenge**: Users reported that HTML formatting (bold, italic, colors) applied in the Question field was lost in both front and back templates.
 
