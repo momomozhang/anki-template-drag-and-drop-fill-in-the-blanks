@@ -34,7 +34,7 @@
             try {
                 if (innerHTML && innerHTML !== textContent) {
                     // HTML formatting exists - use simple regex replacement with dark blue + bold
-                    var htmlProcessed = innerHTML.replace(/\[\[d\d+::([^\]]+)\]\]/g, '<strong style="color: #1565c0;">$1</strong>');
+                    var htmlProcessed = innerHTML.replace(/\[\[d\d*::([^\]]+)\]\]/g, '<strong style="color: #1565c0;">$1</strong>');
                     
                     if (htmlProcessed !== innerHTML) {
                         htmlProcessingResult = htmlProcessed;
@@ -47,7 +47,7 @@
             
             // Fallback to text processing
             try {
-                var textProcessed = textContent.replace(/\[\[d\d+::([^\]]+)\]\]/g, '$1');
+                var textProcessed = textContent.replace(/\[\[d\d*::([^\]]+)\]\]/g, '$1');
                 textProcessingResult = textProcessed;
                 textProcessingSuccess = true;
             } catch (error) {

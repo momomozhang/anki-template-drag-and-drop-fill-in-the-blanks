@@ -74,10 +74,28 @@ function parseQuestion() {
     // Test HTML processing
     try {
         if (innerHTML && innerHTML !== textContent) {
-            // HTML formatting exists - test simple regex replacement
+            // HTML formatting exists - use smart regex replacement
             var htmlAnswers = new Map();
-            var htmlProcessed = innerHTML.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num, text) {
-                var blankId = 'd' + num;
+            var nextAutoId = 1;
+            
+            // Find max existing number first
+            var maxNum = 0;
+            innerHTML.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num) {
+                maxNum = Math.max(maxNum, parseInt(num));
+            });
+            nextAutoId = maxNum + 1;
+            
+            // Process both patterns in one pass
+            var htmlProcessed = innerHTML.replace(/\[\[d(\d*)::([^\]]+)\]\]/g, function(match, num, text) {
+                var blankId;
+                if (num && num.length > 0) {
+                    // Legacy pattern: use original number
+                    blankId = 'd' + num;
+                } else {
+                    // New pattern: generate sequential ID
+                    blankId = 'd' + nextAutoId;
+                    nextAutoId++;
+                }
                 htmlAnswers.set(blankId, text);
                 return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
             });
@@ -101,8 +119,26 @@ function parseQuestion() {
     // Test text processing (fallback)
     try {
         var textAnswers = new Map();
-        var textProcessed = questionField.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num, text) {
-            var blankId = 'd' + num;
+        var nextAutoId = 1;
+        
+        // Find max existing number first
+        var maxNum = 0;
+        questionField.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num) {
+            maxNum = Math.max(maxNum, parseInt(num));
+        });
+        nextAutoId = maxNum + 1;
+        
+        // Process both patterns in one pass
+        var textProcessed = questionField.replace(/\[\[d(\d*)::([^\]]+)\]\]/g, function(match, num, text) {
+            var blankId;
+            if (num && num.length > 0) {
+                // Legacy pattern: use original number
+                blankId = 'd' + num;
+            } else {
+                // New pattern: generate sequential ID
+                blankId = 'd' + nextAutoId;
+                nextAutoId++;
+            }
             textAnswers.set(blankId, text);
             return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
         });
@@ -119,7 +155,7 @@ function parseQuestion() {
                 });
             }
         } else {
-            textProcessingResult = questionField + '<br><br><em style="color: #666;">No drag-drop blanks found. Use the add-on to create [[d1::text]] syntax.</em>';
+            textProcessingResult = questionField + '<br><br><em style="color: #666;">No drag-drop blanks found. Use the add-on to create [[d::text]] syntax.</em>';
             textProcessingSuccess = true;
             processingMethod = 'text';
         }
@@ -154,9 +190,9 @@ function createDraggableItems() {
     var textContent = questionData.textContent;
     var innerHTML = questionData.innerHTML;
     
-    // Extract items from [[dN::text]] syntax
+    // Extract items from [[dN::text]] and [[d::text]] syntax
     var items = [];
-    var regex = /\[\[d\d+::([^\]]+)\]\]/g;
+    var regex = /\[\[d\d*::([^\]]+)\]\]/g;
     var match;
     
     // Try HTML processing first for formatted items
@@ -165,7 +201,7 @@ function createDraggableItems() {
         try {
             // Extract items from HTML content
             var htmlItems = [];
-            var htmlRegex = /\[\[d\d+::([^\]]+)\]\]/g;
+            var htmlRegex = /\[\[d\d*::([^\]]+)\]\]/g;
             var htmlMatch;
             
             while ((htmlMatch = htmlRegex.exec(innerHTML)) !== null) {
@@ -202,7 +238,7 @@ function createDraggableItems() {
     
     // If no items found, show helpful message
     if (items.length === 0) {
-        itemCollection.innerHTML = '<p style="color: #666; font-style: italic;">No draggable items found. Use the add-on to create [[d1::text]] syntax.</p>';
+        itemCollection.innerHTML = '<p style="color: #666; font-style: italic;">No draggable items found. Use the add-on to create [[d::text]] syntax.</p>';
         return;
     }
     
