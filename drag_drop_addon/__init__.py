@@ -125,47 +125,109 @@ def setup_keyboard_shortcut_minimal(editor):
         print(f"Drag-Drop: Shortcut setup failed: {e}")
 
 def add_drag_drop_button_minimal(buttons, editor):
-    """Minimal button setup with native Qt integration"""
+    """Robust button setup with emoji fallback strategies"""
     
-    print("Drag-Drop Blanks: Setting up minimal version...")
+    print("Drag-Drop Blanks: Setting up robust version...")
     
     # Setup keyboard shortcut using native Qt
     setup_keyboard_shortcut_minimal(editor)
     
-    # Add optional visual button
-    try:
-        # Try modern API first
-        if hasattr(editor, 'addButton'):
-            button = editor.addButton(
-                icon=":/icons/cloze.png",
-                cmd="drag_drop_minimal",
-                tip="Create drag-drop blank [[dN::text]] with Ctrl+Shift+D",
-                func=lambda e: create_drag_drop_blank_minimal(e)
-            )
-            print("Drag-Drop Blanks: Button created with modern API")
-            return buttons + [button]
-        else:
-            # Fallback to legacy API
+    # Progressive enhancement for emoji support
+    def attempt_emoji_button(emoji_text):
+        """Try to create button with emoji text"""
+        try:
+            if hasattr(editor, 'addButton'):
+                # Modern API attempts
+                try:
+                    # Method 1: Direct text parameter
+                    return editor.addButton(
+                        text=emoji_text,
+                        cmd="drag_drop_minimal",
+                        tip=f"Create drag-drop blank [[dN::text]] with Ctrl+Shift+D {emoji_text}",
+                        func=lambda e: create_drag_drop_blank_minimal(e)
+                    )
+                except (TypeError, AttributeError):
+                    # Method 2: No icon + JS injection
+                    button = editor.addButton(
+                        icon=None,
+                        cmd="drag_drop_minimal",
+                        tip=f"Create drag-drop blank [[dN::text]] with Ctrl+Shift+D {emoji_text}",
+                        func=lambda e: create_drag_drop_blank_minimal(e)
+                    )
+                    # Inject emoji via JavaScript
+                    emoji_js = f"""
+                    setTimeout(function() {{
+                        var btn = document.querySelector('[title*="drag-drop blank"]');
+                        if (btn) btn.innerHTML = '{emoji_text}';
+                    }}, 100);
+                    """
+                    editor.web.eval(emoji_js)
+                    return button
+            else:
+                # Legacy API
+                editor._links['drag_drop_minimal'] = lambda e: create_drag_drop_blank_minimal(e)
+                return editor._addButton(
+                    emoji_text,
+                    "drag_drop_minimal", 
+                    f"Create drag-drop blank [[dN::text]] with Ctrl+Shift+D {emoji_text}"
+                )
+        except Exception as e:
+            print(f"Drag-Drop Blanks: Failed to create button with '{emoji_text}': {e}")
+            return None
+
+    def attempt_icon_fallback():
+        """Fallback to original icon"""
+        try:
+            if hasattr(editor, 'addButton'):
+                return editor.addButton(
+                    icon=":/icons/cloze.png",
+                    cmd="drag_drop_minimal",
+                    tip="Create drag-drop blank [[dN::text]] with Ctrl+Shift+D",
+                    func=lambda e: create_drag_drop_blank_minimal(e)
+                )
             editor._links['drag_drop_minimal'] = lambda e: create_drag_drop_blank_minimal(e)
-            button = editor._addButton(
+            return editor._addButton(
                 ":/icons/cloze.png",
-                "drag_drop_minimal", 
+                "drag_drop_minimal",
                 "Create drag-drop blank [[dN::text]] with Ctrl+Shift+D"
             )
-            print("Drag-Drop Blanks: Button created with legacy API")
+        except Exception as e:
+            print(f"Drag-Drop Blanks: Icon fallback failed: {e}")
+            return None
+
+    # Try emoji options in order of preference
+    emoji_options = ["❤️", "♥️", "💙", "♡"]
+
+    for emoji in emoji_options:
+        button = attempt_emoji_button(emoji)
+        if button:
+            print(f"Drag-Drop Blanks: Successfully created button with emoji: {emoji}")
             return buttons + [button]
-            
-    except Exception as e:
-        print(f"Drag-Drop Blanks: Button creation failed: {e}")
-        # Still return buttons even if button creation fails
-        return buttons
+
+    # Final fallback to original icon
+    button = attempt_icon_fallback()
+    if button:
+        print("Drag-Drop Blanks: Using original icon as fallback")
+        return buttons + [button]
+
+    print("Drag-Drop Blanks: All button creation attempts failed")
+    return buttons
 
 def show_shortcut_info():
     """Show information about using the keyboard shortcut"""
-    showInfo("Drag-Drop Blank Creator\n\nTo create drag-drop blanks:\n\n1. Select text with your mouse\n2. Press Ctrl+Shift+D (or Cmd+Shift+D on Mac)\n\nExample:\nSelect 'Python' → Press Ctrl+Shift+D → Get [[d1::Python]]\n\nThe blanks will be automatically numbered (d1, d2, d3...)")
+    info_text = (
+        "Drag-Drop Blank Creator\n\n"
+        "To create drag-drop blanks:\n\n"
+        "1. Select text with your mouse\n"
+        "2. Press Ctrl+Shift+D (or Cmd+Shift+D on Mac)\n\n"
+        "Example:\n"
+        "Select 'Python' → Press Ctrl+Shift+D → Get [[d1::Python]]\n\n"
+        "The blanks will be automatically numbered (d1, d2, d3...)"
+    )
+    showInfo(info_text)
 
 # Replace existing hook with minimal version
 print("Drag-Drop Blanks: Setting up minimal button hook...")
 addHook("setupEditorButtons", add_drag_drop_button_minimal)
 
-print("Drag-Drop Blanks: Add-on loaded successfully (Version 1 - Native Qt)")
+print("Drag-Drop Blanks: Add-on loaded successfully (Version 3 - Robust Emoji)")
