@@ -33,8 +33,8 @@
             // Try HTML processing first if formatting exists
             try {
                 if (innerHTML && innerHTML !== textContent) {
-                    // HTML formatting exists - use simple regex replacement
-                    var htmlProcessed = innerHTML.replace(/\[\[d\d+::([^\]]+)\]\]/g, '$1');
+                    // HTML formatting exists - use simple regex replacement with dark blue + bold
+                    var htmlProcessed = innerHTML.replace(/\[\[d\d+::([^\]]+)\]\]/g, '<strong style="color: #1565c0;">$1</strong>');
                     
                     if (htmlProcessed !== innerHTML) {
                         htmlProcessingResult = htmlProcessed;
