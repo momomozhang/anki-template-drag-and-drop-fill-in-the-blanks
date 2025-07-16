@@ -126,6 +126,20 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 - Advanced formatting options
 - Performance optimizations
 
+### ✅ Enhanced Answer Display (Session 12)
+**Feature**: Enhanced back template with styled blanked-out terms
+- **Goal**: In back template, show complete answer text with original blank items highlighted
+- **Visual Effect**: Words/phrases that were `[[d1::text]]` blanks display in **bold dark blue**
+- **Example**: "Python is a programming language" (where "Python" and "programming" are bold and dark blue)
+- **Purpose**: Provide clear visual feedback showing which terms were the learning targets
+- **Implementation**: Modified back template regex processing to wrap identified terms in `<strong style="color: #1565c0;">` tags
+- **Technical Details**: 
+  - **File**: `back.html:37`
+  - **Change**: `innerHTML.replace(/\[\[d\d+::([^\]]+)\]\]/g, '<strong style="color: #1565c0;">$1</strong>')`
+  - **Color**: `#1565c0` (matches theme color from `.answer-input.filled`)
+  - **Integration**: Seamlessly works with existing dual processing architecture
+- **Status**: ✅ **Successfully Implemented**
+
 ### ✅ Formatting Preservation Implementation (Session 11)
 **Challenge**: Users reported that HTML formatting (bold, italic, colors) applied in the Question field was lost in both front and back templates.
 
