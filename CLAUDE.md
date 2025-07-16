@@ -44,8 +44,8 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
   - **Green**: User-placed correct answers
   - **Red**: User-placed incorrect answers  
   - **Grey**: Auto-filled correct answers for empty blanks
-- **Show Answer (Back)**: Anki's native button shows original Question field text with `[[d1::text]]` syntax intact
-- **Answer**: Raw Question field content displaying bracketed syntax as-is + optional explanation
+- **Show Answer (Back)**: Anki's native button shows clean text with `[[d1::text]]` syntax stripped
+- **Answer**: Natural reading text with answers filled in + optional explanation
 
 ## Development Journey
 
@@ -76,10 +76,10 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 - **Technical Issues**: JavaScript processing failures in back template environment
 - **Multiple Failed Attempts**: Hidden div, regex replacement, diagnostic approaches all failed
 - **Root Cause**: Fundamental execution environment differences between front/back templates
-- **Design Decision**: ✅ **Simplified approach** - Display raw Question field content as-is
-- **New Specification**: Back template shows original text with `[[d1::text]]` syntax intact
-- **Benefits**: Eliminates complexity, provides reliable fallback, shows source format
-- **Implementation**: ✅ **Direct field substitution** - Zero JavaScript, maximum reliability
+- **Design Decision**: ✅ **Enhanced approach** - Strip `[[dN::]]` syntax while preserving text content
+- **New Specification**: Back template shows clean, readable text with answers naturally filled in
+- **Benefits**: Natural reading experience, clean presentation, maintains reliability
+- **Implementation**: ✅ **Hidden div pattern with regex processing** - Proven approach with secure text manipulation
 
 ### UI Redesign Decision (Session 9)
 **New Requirement**: Modernize interface design while preserving functionality
@@ -116,7 +116,7 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 ### ✅ Completed Features
 - **Automation**: Fully functional `Ctrl+Shift+D` shortcut for blank creation
 - **Front Template**: Interactive drag-and-drop interface with visual feedback
-- **Back Template**: Simplified design displaying raw Question field content as-is
+- **Back Template**: Enhanced design displaying clean text with bracketed syntax stripped
 - **Modern UI**: Semantic form-style interface with cohesive blue color scheme
 - **Cross-Platform**: Works on Anki Desktop, AnkiWeb, and mobile
 - **User Experience**: Streamlined workflow from content creation to study

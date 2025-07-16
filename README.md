@@ -27,7 +27,7 @@ Transform any text into an engaging learning exercise where words or phrases are
 
 ### 📋 Project Status
 - ✅ **Front Template**: Fully functional drag-and-drop interface with modern UI
-- ✅ **Back Template**: Simplified design displaying raw Question field content
+- ✅ **Back Template**: Enhanced design displaying clean text with bracketed syntax stripped
 - ✅ **Cross-platform**: Works on all Anki platforms
 - ✅ **Add-on automation**: Working automation using native Qt APIs
 - ✅ **UI Redesign**: Modern interface with integrated input boxes and bottom panel layout
@@ -61,8 +61,8 @@ Transform any text into an engaging learning exercise where words or phrases are
 #### **Back Template Design Decision (Session 8-10)**
 **Challenge**: Processing `[[d1::text]]` syntax for highlighted answers on back template  
 **Technical Issues**: JavaScript processing failures in back template environment  
-**Decision**: ✅ **Simplified approach** - Display raw Question field content as-is  
-**Implementation**: Direct field substitution with zero JavaScript dependencies  
-**Result**: ✅ **Delivered** - Reliable back template showing original text with bracketed syntax intact
+**Decision**: ✅ **Enhanced approach** - Strip `[[dN::]]` syntax while preserving text content  
+**Implementation**: Hidden div pattern with secure regex processing  
+**Result**: ✅ **Delivered** - Clean, readable back template with natural text flow
 
 **Key Insight**: Anki's web environment requires specialized patterns different from standard web development.

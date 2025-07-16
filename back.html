@@ -1,9 +1,9 @@
 <div class="answer-container">
+    <div id="question-data" style="display: none;">{{Question}}</div>
+    
     <div class="answer-section">
-        <h3>Question</h3>
-        <div class="answer-text">
-            {{Question}}
-        </div>
+        <h3>Answer</h3>
+        <div class="answer-text" id="answer-display"></div>
     </div>
     
     {{#Explain}}
@@ -13,3 +13,21 @@
     </div>
     {{/Explain}}
 </div>
+
+<script>
+(function() {
+    var questionData = document.getElementById('question-data');
+    var answerDisplay = document.getElementById('answer-display');
+    
+    if (questionData && answerDisplay) {
+        var content = questionData.textContent.trim();
+        
+        if (content && content !== '{{Question}}') {
+            var processed = content.replace(/\[\[d\d+::([^\]]+)\]\]/g, '$1');
+            answerDisplay.textContent = processed;
+        } else {
+            answerDisplay.innerHTML = '<em style="color: #666;">No question content found.</em>';
+        }
+    }
+})();
+</script>
