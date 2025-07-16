@@ -2,67 +2,57 @@
 
 **A complete project built entirely with Claude Code - from concept to deployment**
 
-This interactive fill-in-the-blank flashcard system for Anki demonstrates the power of AI-assisted development using Claude Code. Every line of code, documentation, feature, as well as git & Github actions was created through collaborative programming with Claude Code agent.
+In this repo, every line of code, documentation, feature, as well as git & Github actions was created through collaborative programming with Claude Code agent. What's my point? Claude Code is no magic, you still need to learn & practice how to use it!
 
-### 🎯 Project Goals
-- **Primary**: Showcase Claude Code's capability to build complete, functional projects ✅
-- **Secondary**: Solve real Anki users' need for interactive drag-and-drop flashcards ✅
+Check `documentation` folder for the learnings! 
 
 ### ✨ Features
 Transform any text into an engaging learning exercise where words or phrases are removed from sentences and become draggable items that students must place back in the correct positions.
 
-- **Modern UI**: Integrated input boxes with bottom panel for draggable items
-- **Drag & Drop Interface**: HTML5 native drag-and-drop API
-- **Visual Feedback**: Color-coded feedback system (green/red/grey)
-- **Cross-Platform**: Works on Anki Desktop, AnkiWeb, and mobile apps
-- **Randomization**: Shuffled item order prevents pattern memorization
-- **Smart Parsing**: Automatically extracts draggable items from `[[d1::text]]` syntax
-- **Streamlined Workflow**: No manual field population required
+### Installation & Usage
 
-### 💡 Use Cases
-- Language learning (vocabulary, grammar)
-- Medical terminology
-- Historical facts and dates
-- Code syntax practice
+**Initial Setup:**
+1. **Install Add-on**: 
+   - Find your Anki add-ons directory:
+     - **Windows**: `%APPDATA%\Anki2\addons21\`
+     - **Mac**: `~/Library/Application Support/Anki2/addons21/`
+     - **Linux**: `~/.local/share/Anki2/addons21/`
+     - **Alternative**: Tools → Add-ons → View Files (opens the directory)
+   - Copy the `drag_drop_addon` folder to this directory
+   - Restart Anki to load the add-on
+2. **Configure Note Type**:
+   - Tools → Manage Note Types → Add (or select existing)
+   - Add fields: Question, Explain (optional)
+   - Click "Cards..." to edit templates
 
-### 📋 Project Status
-- ✅ **Front Template**: Fully functional drag-and-drop interface with modern UI
-- ✅ **Back Template**: Enhanced design displaying clean text with bracketed syntax stripped
-- ✅ **Cross-platform**: Works on all Anki platforms
-- ✅ **Add-on automation**: Working automation using native Qt APIs
-- ✅ **UI Redesign**: Modern interface with integrated input boxes and bottom panel layout
+**Template Configuration:**
+1. **Front Template**: Clear existing content, paste `front.html`
+2. **Back Template**: Clear existing content, paste `back.html`  
+3. **Styling**: Clear existing styles, paste `style.css`
+4. Save and close
 
-**Project complete** - All templates and automation delivered with modern UI and reliable functionality.
+**Content Creation Workflow:**
+1. **Add Note**: Browse → Add (or press 'A')
+2. **Enter Text**: Type or paste content in Question field
+3. **Create Blanks**: 
+   - Select text you want as draggable item
+   - Press `Ctrl+Shift+D` or click ❤️ button
+   - Text becomes `[[d1::word]]` format
+   - Repeat for additional blanks (auto-increments)
+4. **Add Explanation** (optional): Use Explain field for context
 
-### 🔧 **Technical Solutions Summary**
+**Study Experience:**
+1. **Front Side**: See text with input boxes and draggable items below
+2. **Interact**: Drag items to correct positions in text
+3. **Check**: Click "Show Answers" for color-coded feedback:
+   - Green: Correct placement
+   - Red: Incorrect placement  
+   - Grey: Auto-filled correct answers
+4. **Reset**: Click "Reset" to try again or continue to back
+5. **Back Side**: See clean text with answers filled in
 
-#### **Automation Fix (Session 4)**
-**Problem**: 500+ lines of JavaScript selection monitoring failed in QtWebEngine  
-**Solution**: Native Qt APIs using `editor.web.selectedText()`  
-**Result**: Reliable text selection and blank creation with Ctrl+Shift+D
-
-#### **Template Rendering Fix (Session 6)**
-**Problem**: Complete front-side template failure - blank display, no content  
-**Root Causes**: DOMContentLoaded timing + field substitution + variable scope issues  
-**Solution**: Multi-part fix:
-- IIFE pattern for proper variable scoping
-- Conditional rendering `{{#Question}}...{{/Question}}`
-- Hidden div pattern for reliable field access
-- Immediate execution without DOM events
-
-**Result**: Fully functional interactive template with cloze-style blanks and draggable items
-
-#### **Multi-Card Feature Research (Session 7)**
-**Considered**: Multi-card generation system (like cloze deletion)  
-**Research**: Extensive technical analysis revealed complex implementation requirements  
-**Decision**: ❌ **Feature dropped** - Complexity deemed too high for the benefit provided  
-**Outcome**: Single-card system provides excellent functionality with simpler user experience
-
-#### **Back Template Design Decision (Session 8-10)**
-**Challenge**: Processing `[[d1::text]]` syntax for highlighted answers on back template  
-**Technical Issues**: JavaScript processing failures in back template environment  
-**Decision**: ✅ **Enhanced approach** - Strip `[[dN::]]` syntax while preserving text content  
-**Implementation**: Hidden div pattern with secure regex processing  
-**Result**: ✅ **Delivered** - Clean, readable back template with natural text flow
-
-**Key Insight**: Anki's web environment requires specialized patterns different from standard web development.
+**Tips:**
+- Supports HTML formatting (bold, italic, colors)
+- Works on desktop, web, and mobile
+- Items are shuffled to prevent memorization
+- Click filled blanks to remove items
