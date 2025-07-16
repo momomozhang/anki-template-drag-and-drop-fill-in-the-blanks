@@ -20,7 +20,7 @@ body {
 
 /* Content Area */
 .content-area {
-    max-width: 800px;
+    max-width: 90%;
     margin: 0 auto;
     padding: 2rem;
     width: 100%;
@@ -42,16 +42,15 @@ body {
 .answer-input {
     display: inline-block;
     min-width: 80px;
-    min-height: 30px;
     border: 2px solid #e9ecef;
-    border-radius: 6px;
+    border-radius: 4px;
     background-color: #fff;
-    padding: 0.5rem 1rem;
+    padding: 10px 18px;
     margin: 0 0.25rem;
     text-align: center;
     cursor: pointer;
     transition: border-color 0.2s ease, background-color 0.2s ease;
-    font-size: inherit;
+    font-size: 14px;
     font-family: inherit;
     vertical-align: baseline;
 }
