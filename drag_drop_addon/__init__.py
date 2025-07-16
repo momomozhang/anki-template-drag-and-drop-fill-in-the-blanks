@@ -1,5 +1,5 @@
 # Drag-and-Drop Blanks Add-on for Anki
-# Adds a toolbar button to create [[dN::text]] syntax for drag-and-drop templates
+# Adds a toolbar button to create [[d::text]] syntax for drag-and-drop templates
 # Version 1: Minimal Refactor using native Qt APIs
 
 from anki.hooks import addHook
@@ -138,7 +138,7 @@ def add_drag_drop_button_minimal(buttons, editor):
                     return editor.addButton(
                         text=emoji_text,
                         cmd="drag_drop_minimal",
-                        tip=f"Create drag-drop blank [[dN::text]] with Ctrl+Shift+D {emoji_text}",
+                        tip=f"Create drag-drop blank [[d::text]] with Ctrl+Shift+D {emoji_text}",
                         func=lambda e: create_drag_drop_blank_minimal(e)
                     )
                 except (TypeError, AttributeError):
@@ -146,7 +146,7 @@ def add_drag_drop_button_minimal(buttons, editor):
                     button = editor.addButton(
                         icon=None,
                         cmd="drag_drop_minimal",
-                        tip=f"Create drag-drop blank [[dN::text]] with Ctrl+Shift+D {emoji_text}",
+                        tip=f"Create drag-drop blank [[d::text]] with Ctrl+Shift+D {emoji_text}",
                         func=lambda e: create_drag_drop_blank_minimal(e)
                     )
                     # Inject emoji via JavaScript
@@ -164,7 +164,7 @@ def add_drag_drop_button_minimal(buttons, editor):
                 return editor._addButton(
                     emoji_text,
                     "drag_drop_minimal", 
-                    f"Create drag-drop blank [[dN::text]] with Ctrl+Shift+D {emoji_text}"
+                    f"Create drag-drop blank [[d::text]] with Ctrl+Shift+D {emoji_text}"
                 )
         except Exception as e:
             print(f"Drag-Drop Blanks: Failed to create button with '{emoji_text}': {e}")
@@ -177,14 +177,14 @@ def add_drag_drop_button_minimal(buttons, editor):
                 return editor.addButton(
                     icon=":/icons/cloze.png",
                     cmd="drag_drop_minimal",
-                    tip="Create drag-drop blank [[dN::text]] with Ctrl+Shift+D",
+                    tip="Create drag-drop blank [[d::text]] with Ctrl+Shift+D",
                     func=lambda e: create_drag_drop_blank_minimal(e)
                 )
             editor._links['drag_drop_minimal'] = lambda e: create_drag_drop_blank_minimal(e)
             return editor._addButton(
                 ":/icons/cloze.png",
                 "drag_drop_minimal",
-                "Create drag-drop blank [[dN::text]] with Ctrl+Shift+D"
+                "Create drag-drop blank [[d::text]] with Ctrl+Shift+D"
             )
         except Exception as e:
             print(f"Drag-Drop Blanks: Icon fallback failed: {e}")
@@ -216,8 +216,8 @@ def show_shortcut_info():
         "1. Select text with your mouse\n"
         "2. Press Ctrl+Shift+D (or Cmd+Shift+D on Mac)\n\n"
         "Example:\n"
-        "Select 'Python' → Press Ctrl+Shift+D → Get [[d1::Python]]\n\n"
-        "The blanks will be automatically numbered (d1, d2, d3...)"
+        "Select 'Python' → Press Ctrl+Shift+D → Get [[d::Python]]\n\n"
+        "The template will handle numbering automatically for compatibility."
     )
     showInfo(info_text)
 

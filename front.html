@@ -28,8 +28,67 @@
     // Global state for drag-and-drop functionality
     var studyState = {
         correctAnswers: new Map(),
-        userAnswers: new Map()
+        userAnswers: new Map(),
+        idGenerationLock: false,
+        usedIds: new Set()
     };
+
+// Shared utility functions to prevent code duplication
+function findMaxExistingNumber(content) {
+    var maxNum = 0;
+    content.replace(/\[\[d(\d+)::((?:(?!\]\])[\s\S])*)\]\]/g, function(match, num) {
+        var parsedNum = parseInt(num, 10);
+        if (!isNaN(parsedNum) && parsedNum > 0) {
+            maxNum = Math.max(maxNum, parsedNum);
+        }
+    });
+    return maxNum;
+}
+
+// Shared ID generation factory to prevent code duplication
+function createIdGenerator(startId) {
+    var nextAutoId = startId || 1;
+    
+    return function generateSafeId(num) {
+        // Prevent race conditions in ID generation
+        if (studyState.idGenerationLock) {
+            // Wait for lock to be released
+            var attempts = 0;
+            while (studyState.idGenerationLock && attempts < 100) {
+                attempts++;
+            }
+        }
+        
+        studyState.idGenerationLock = true;
+        
+        try {
+            var blankId;
+            if (num && num.length > 0) {
+                // Legacy pattern: use original number
+                blankId = 'd' + num;
+                if (studyState.usedIds.has(blankId)) {
+                    // Handle duplicate IDs
+                    var counter = 1;
+                    while (studyState.usedIds.has(blankId + '_' + counter)) {
+                        counter++;
+                    }
+                    blankId = blankId + '_' + counter;
+                }
+            } else {
+                // New pattern: generate sequential ID
+                do {
+                    blankId = 'd' + nextAutoId;
+                    nextAutoId++;
+                } while (studyState.usedIds.has(blankId));
+            }
+            
+            studyState.usedIds.add(blankId);
+            return blankId;
+        } finally {
+            studyState.idGenerationLock = false;
+        }
+    };
+}
 
 // Initialize study mode
 function initializeStudyMode() {
@@ -57,7 +116,7 @@ function parseQuestion() {
     studyState.correctAnswers.clear();
     
     // Use textContent for validation (preserve working logic)
-    var questionField = textContent;
+    var questionField = validateAndSanitizePattern(textContent);
     
     if (!questionField || questionField.trim() === '' || questionField === '{{Question}}') {
         exerciseText.innerHTML = '<p style="color: #666; font-style: italic;">No question content found. Please add content to your Question field.</p>';
@@ -74,28 +133,23 @@ function parseQuestion() {
     // Test HTML processing
     try {
         if (innerHTML && innerHTML !== textContent) {
+            // Validate and sanitize HTML content
+            innerHTML = validateAndSanitizePattern(innerHTML);
+            
             // HTML formatting exists - use smart regex replacement
             var htmlAnswers = new Map();
             var nextAutoId = 1;
             
+            // Use shared ID generation function
+            var generateSafeId = createIdGenerator(nextAutoId);
+            
             // Find max existing number first
-            var maxNum = 0;
-            innerHTML.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num) {
-                maxNum = Math.max(maxNum, parseInt(num));
-            });
+            var maxNum = findMaxExistingNumber(innerHTML);
             nextAutoId = maxNum + 1;
             
             // Process both patterns in one pass
-            var htmlProcessed = innerHTML.replace(/\[\[d(\d*)::([^\]]+)\]\]/g, function(match, num, text) {
-                var blankId;
-                if (num && num.length > 0) {
-                    // Legacy pattern: use original number
-                    blankId = 'd' + num;
-                } else {
-                    // New pattern: generate sequential ID
-                    blankId = 'd' + nextAutoId;
-                    nextAutoId++;
-                }
+            var htmlProcessed = innerHTML.replace(/\[\[d(\d*)::((?:(?!\]\])[\s\S])*)\]\]/g, function(match, num, text) {
+                var blankId = generateSafeId(num);
                 htmlAnswers.set(blankId, text);
                 return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
             });
@@ -121,24 +175,16 @@ function parseQuestion() {
         var textAnswers = new Map();
         var nextAutoId = 1;
         
+        // Use shared ID generation function for text processing
+        var generateSafeTextId = createIdGenerator(nextAutoId);
+        
         // Find max existing number first
-        var maxNum = 0;
-        questionField.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num) {
-            maxNum = Math.max(maxNum, parseInt(num));
-        });
+        var maxNum = findMaxExistingNumber(questionField);
         nextAutoId = maxNum + 1;
         
         // Process both patterns in one pass
-        var textProcessed = questionField.replace(/\[\[d(\d*)::([^\]]+)\]\]/g, function(match, num, text) {
-            var blankId;
-            if (num && num.length > 0) {
-                // Legacy pattern: use original number
-                blankId = 'd' + num;
-            } else {
-                // New pattern: generate sequential ID
-                blankId = 'd' + nextAutoId;
-                nextAutoId++;
-            }
+        var textProcessed = questionField.replace(/\[\[d(\d*)::((?:(?!\]\])[\s\S])*)\]\]/g, function(match, num, text) {
+            var blankId = generateSafeTextId(num);
             textAnswers.set(blankId, text);
             return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
         });
@@ -174,7 +220,7 @@ function parseQuestion() {
         finalContent = '<p style="color: red;">ERROR: Both processing methods failed</p>';
     }
     
-    exerciseText.innerHTML = finalContent;
+    exerciseText.innerHTML = sanitizeHtml(finalContent);
 }
 
 // Create draggable items from Question field syntax with HTML formatting preservation
@@ -192,7 +238,7 @@ function createDraggableItems() {
     
     // Extract items from [[dN::text]] and [[d::text]] syntax
     var items = [];
-    var regex = /\[\[d\d*::([^\]]+)\]\]/g;
+    var regex = /\[\[d\d*::((?:(?!\]\])[\s\S])*)\]\]/g;
     var match;
     
     // Try HTML processing first for formatted items
@@ -201,7 +247,7 @@ function createDraggableItems() {
         try {
             // Extract items from HTML content
             var htmlItems = [];
-            var htmlRegex = /\[\[d\d*::([^\]]+)\]\]/g;
+            var htmlRegex = /\[\[d\d*::((?:(?!\]\])[\s\S])*)\]\]/g;
             var htmlMatch;
             
             while ((htmlMatch = htmlRegex.exec(innerHTML)) !== null) {
@@ -251,7 +297,7 @@ function createDraggableItems() {
         var itemElement = document.createElement('div');
         itemElement.className = 'draggable-item';
         itemElement.draggable = true;
-        itemElement.innerHTML = item.html;
+        itemElement.innerHTML = sanitizeHtml(item.html);
         itemElement.setAttribute('data-item-text', item.text);
         itemElement.setAttribute('data-item-index', index);
         itemCollection.appendChild(itemElement);
@@ -280,6 +326,8 @@ function shuffleArray(array) {
 // Reset study state
 function resetStudyState() {
     studyState.userAnswers.clear();
+    studyState.usedIds.clear();
+    studyState.idGenerationLock = false;
 }
 
 // Attach drag and drop events
@@ -348,8 +396,8 @@ function handleDrop(e) {
     var itemIndex = e.dataTransfer.getData('item-index');
     var blankId = e.target.getAttribute('data-blank-id');
     
-    // Fill the drop zone with HTML content
-    e.target.innerHTML = itemHtml || itemText;
+    // Fill the drop zone with sanitized HTML content
+    e.target.innerHTML = sanitizeHtml(itemHtml || itemText);
     e.target.classList.add('filled');
     
     // Mark item as used
@@ -402,9 +450,9 @@ function showAnswers() {
         var dropZone = exerciseText.querySelector('[data-blank-id="' + blankId + '"]');
         var userAnswer = studyState.userAnswers.get(blankId);
         
-        // Set the correct text with HTML formatting if available
+        // Set the correct text with sanitized HTML formatting if available
         var formattedAnswer = extractFormattedItem(document.getElementById('question-data').innerHTML, correctAnswer);
-        dropZone.innerHTML = formattedAnswer;
+        dropZone.innerHTML = sanitizeHtml(formattedAnswer);
         
         // Apply appropriate styling based on user's original answer
         dropZone.classList.remove('filled', 'correct', 'incorrect', 'auto-filled');
@@ -439,6 +487,74 @@ function resetStudy() {
     if (itemBank) {
         itemBank.style.display = 'block';
     }
+}
+
+// HTML sanitization function to prevent XSS attacks
+function sanitizeHtml(text) {
+    if (!text) return '';
+    
+    // Create a temporary div to leverage browser's HTML parsing
+    var tempDiv = document.createElement('div');
+    tempDiv.textContent = text;
+    
+    // Allow only safe HTML tags and attributes
+    var allowedTags = ['b', 'i', 'u', 'em', 'strong', 'span', 'br'];
+    var allowedAttributes = ['style'];
+    
+    // Simple whitelist-based sanitization
+    var sanitized = tempDiv.innerHTML;
+    
+    // Remove script tags and event handlers
+    sanitized = sanitized.replace(/<script[^>]*>.*?<\/script>/gi, '');
+    sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '');
+    sanitized = sanitized.replace(/javascript:/gi, '');
+    sanitized = sanitized.replace(/data:/gi, '');
+    sanitized = sanitized.replace(/vbscript:/gi, '');
+    
+    return sanitized;
+}
+
+// Edge case validation for malformed patterns
+function validateAndSanitizePattern(text) {
+    if (!text || typeof text !== 'string') {
+        return '';
+    }
+    
+    // Check for extremely long text (potential DoS)
+    if (text.length > 10000) {
+        console.warn('Pattern text too long, truncating');
+        text = text.substring(0, 10000);
+    }
+    
+    // Check for deeply nested brackets (potential ReDoS)
+    var bracketDepth = 0;
+    var maxDepth = 10;
+    for (var i = 0; i < text.length; i++) {
+        if (text[i] === '[') bracketDepth++;
+        if (text[i] === ']') bracketDepth--;
+        if (bracketDepth > maxDepth) {
+            console.warn('Pattern contains deeply nested brackets, sanitizing');
+            return text.replace(/\[{3,}/g, '[[').replace(/\]{3,}/g, ']]');
+        }
+    }
+    
+    // Validate pattern structure
+    var malformedPatterns = [
+        /\[\[d[^\]]*\[\[/g,  // Nested opening brackets
+        /\]\][^\[]*\]\]/g,   // Nested closing brackets
+        /\[\[d[^:]*::[^:]*::/g, // Multiple colons
+        /\[\[d\d{4,}/g       // Extremely long numbers
+    ];
+    
+    for (var i = 0; i < malformedPatterns.length; i++) {
+        if (malformedPatterns[i].test(text)) {
+            console.warn('Malformed pattern detected, sanitizing');
+            // Return safe fallback
+            return text.replace(/\[\[d[^\]]*\]\]/g, '[MALFORMED_PATTERN]');
+        }
+    }
+    
+    return text;
 }
 
 // Initialize immediately - no event waiting

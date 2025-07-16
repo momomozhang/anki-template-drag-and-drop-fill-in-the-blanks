@@ -16,6 +16,30 @@
 
 <script>
 (function() {
+    // HTML sanitization function to prevent XSS attacks
+    function sanitizeHtml(text) {
+        if (!text) return '';
+        
+        // Create a temporary div to leverage browser's HTML parsing
+        var tempDiv = document.createElement('div');
+        tempDiv.textContent = text;
+        
+        // Allow only safe HTML tags and attributes
+        var allowedTags = ['b', 'i', 'u', 'em', 'strong', 'span', 'br'];
+        var allowedAttributes = ['style'];
+        
+        // Simple whitelist-based sanitization
+        var sanitized = tempDiv.innerHTML;
+        
+        // Remove script tags and event handlers
+        sanitized = sanitized.replace(/<script[^>]*>.*?<\/script>/gi, '');
+        sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '');
+        sanitized = sanitized.replace(/javascript:/gi, '');
+        sanitized = sanitized.replace(/data:/gi, '');
+        sanitized = sanitized.replace(/vbscript:/gi, '');
+        
+        return sanitized;
+    }
     var questionData = document.getElementById('question-data');
     var answerDisplay = document.getElementById('answer-display');
     
@@ -54,9 +78,9 @@
                 textProcessingSuccess = false;
             }
             
-            // Use the best available result
+            // Use the best available result with sanitization
             if (htmlProcessingSuccess) {
-                answerDisplay.innerHTML = htmlProcessingResult;
+                answerDisplay.innerHTML = sanitizeHtml(htmlProcessingResult);
             } else if (textProcessingSuccess) {
                 answerDisplay.textContent = textProcessingResult;
             } else {
