@@ -11,8 +11,9 @@ This interactive fill-in-the-blank flashcard system for Anki demonstrates the po
 ### ✨ Features
 Transform any text into an engaging learning exercise where words or phrases are removed from sentences and become draggable items that students must place back in the correct positions.
 
+- **Modern UI**: Integrated input boxes with bottom panel for draggable items
 - **Drag & Drop Interface**: HTML5 native drag-and-drop API
-- **Visual Feedback**: Instant success/error indicators  
+- **Visual Feedback**: Color-coded feedback system (green/red/grey)
 - **Cross-Platform**: Works on Anki Desktop, AnkiWeb, and mobile apps
 - **Randomization**: Shuffled item order prevents pattern memorization
 - **Smart Parsing**: Automatically extracts draggable items from `[[d1::text]]` syntax
@@ -28,8 +29,9 @@ Transform any text into an engaging learning exercise where words or phrases are
 - ✅ **Templates**: Fully functional drag-and-drop interface
 - ✅ **Cross-platform**: Works on all Anki platforms
 - ✅ **Add-on automation**: **FIXED** - Working automation using native Qt APIs
+- 🔄 **UI Redesign**: Modernizing interface with integrated input boxes and bottom panel layout
 
-**The project is now complete** - both interactive templates and automation work perfectly.
+**Core functionality complete** - Interactive templates and automation work perfectly. UI redesign in progress.
 
 ### 🔧 **Technical Solutions Summary**
 
