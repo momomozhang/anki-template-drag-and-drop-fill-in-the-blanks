@@ -40,52 +40,164 @@ function initializeStudyMode() {
     attachControlEvents();
 }
 
-// Parse question field and create inline drop zones
+// Parse question field and create inline drop zones with HTML formatting preservation
 function parseQuestion() {
-    // Get field content from hidden div instead of field substitution
-    var questionField = document.getElementById('question-data').textContent;
+    var questionData = document.getElementById('question-data');
     var exerciseText = document.getElementById('exercise-text');
     
-    // Reset study state
+    if (!questionData || !exerciseText) {
+        exerciseText.innerHTML = '<p style="color: red;">ERROR: Missing DOM elements</p>';
+        return;
+    }
+    
+    // Get both content types
+    var textContent = questionData.textContent;
+    var innerHTML = questionData.innerHTML;
+    
     studyState.correctAnswers.clear();
     
-    // Check if we have valid Question field content
+    // Use textContent for validation (preserve working logic)
+    var questionField = textContent;
+    
     if (!questionField || questionField.trim() === '' || questionField === '{{Question}}') {
         exerciseText.innerHTML = '<p style="color: #666; font-style: italic;">No question content found. Please add content to your Question field.</p>';
         return;
     }
     
-    // Replace [[dN::text]] syntax with inline drop zones
-    var studyContent = questionField.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num, text) {
-        var blankId = 'd' + num;
-        
-        // Store correct answer
-        studyState.correctAnswers.set(blankId, text);
-        
-        // Return inline drop zone
-        return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
-    });
+    // Test HTML processing vs text processing
+    var htmlProcessingResult = '';
+    var htmlProcessingSuccess = false;
+    var textProcessingResult = '';
+    var textProcessingSuccess = false;
+    var processingMethod = 'none';
     
-    // If no drag-drop syntax found, show informational message
-    if (studyContent === questionField) {
-        studyContent = questionField + '<br><br><em style="color: #666;">No drag-drop blanks found. Use the add-on to create [[d1::text]] syntax.</em>';
+    // Test HTML processing
+    try {
+        if (innerHTML && innerHTML !== textContent) {
+            // HTML formatting exists - test simple regex replacement
+            var htmlAnswers = new Map();
+            var htmlProcessed = innerHTML.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num, text) {
+                var blankId = 'd' + num;
+                htmlAnswers.set(blankId, text);
+                return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
+            });
+            
+            if (htmlProcessed !== innerHTML) {
+                htmlProcessingResult = htmlProcessed;
+                htmlProcessingSuccess = true;
+                processingMethod = 'html';
+                
+                // Copy HTML answers to global state
+                htmlAnswers.forEach(function(value, key) {
+                    studyState.correctAnswers.set(key, value);
+                });
+            }
+        }
+    } catch (error) {
+        htmlProcessingResult = 'HTML processing error: ' + error.message;
+        htmlProcessingSuccess = false;
     }
     
-    exerciseText.innerHTML = studyContent;
+    // Test text processing (fallback)
+    try {
+        var textAnswers = new Map();
+        var textProcessed = questionField.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num, text) {
+            var blankId = 'd' + num;
+            textAnswers.set(blankId, text);
+            return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
+        });
+        
+        if (textProcessed !== questionField) {
+            textProcessingResult = textProcessed;
+            textProcessingSuccess = true;
+            
+            // Use text answers if HTML processing failed
+            if (!htmlProcessingSuccess) {
+                processingMethod = 'text';
+                textAnswers.forEach(function(value, key) {
+                    studyState.correctAnswers.set(key, value);
+                });
+            }
+        } else {
+            textProcessingResult = questionField + '<br><br><em style="color: #666;">No drag-drop blanks found. Use the add-on to create [[d1::text]] syntax.</em>';
+            textProcessingSuccess = true;
+            processingMethod = 'text';
+        }
+    } catch (error) {
+        textProcessingResult = 'Text processing error: ' + error.message;
+        textProcessingSuccess = false;
+    }
+    
+    // Use the best available processing result
+    var finalContent = '';
+    if (htmlProcessingSuccess) {
+        finalContent = htmlProcessingResult;
+    } else if (textProcessingSuccess) {
+        finalContent = textProcessingResult;
+    } else {
+        finalContent = '<p style="color: red;">ERROR: Both processing methods failed</p>';
+    }
+    
+    exerciseText.innerHTML = finalContent;
 }
 
-// Create draggable items from Question field syntax
+// Create draggable items from Question field syntax with HTML formatting preservation
 function createDraggableItems() {
-    // Get field content from hidden div
-    var questionField = document.getElementById('question-data').textContent;
+    var questionData = document.getElementById('question-data');
     var itemCollection = document.getElementById('item-collection');
+    
+    if (!questionData || !itemCollection) {
+        return;
+    }
+    
+    // Get both content types
+    var textContent = questionData.textContent;
+    var innerHTML = questionData.innerHTML;
     
     // Extract items from [[dN::text]] syntax
     var items = [];
     var regex = /\[\[d\d+::([^\]]+)\]\]/g;
     var match;
-    while ((match = regex.exec(questionField)) !== null) {
-        items.push(match[1].trim());
+    
+    // Try HTML processing first for formatted items
+    var useHtmlFormatting = false;
+    if (innerHTML && innerHTML !== textContent) {
+        try {
+            // Extract items from HTML content
+            var htmlItems = [];
+            var htmlRegex = /\[\[d\d+::([^\]]+)\]\]/g;
+            var htmlMatch;
+            
+            while ((htmlMatch = htmlRegex.exec(innerHTML)) !== null) {
+                var itemText = htmlMatch[1].trim();
+                
+                // Find the formatted version of this item in the HTML
+                var formattedItem = extractFormattedItem(innerHTML, itemText);
+                
+                htmlItems.push({
+                    text: itemText,
+                    html: formattedItem
+                });
+            }
+            
+            if (htmlItems.length > 0) {
+                items = htmlItems;
+                useHtmlFormatting = true;
+            }
+        } catch (error) {
+            // Fall back to text processing if HTML processing fails
+            useHtmlFormatting = false;
+        }
+    }
+    
+    // Fallback to text processing if HTML processing failed or no formatting exists
+    if (!useHtmlFormatting) {
+        while ((match = regex.exec(textContent)) !== null) {
+            items.push({
+                text: match[1].trim(),
+                html: match[1].trim()
+            });
+        }
     }
     
     // If no items found, show helpful message
@@ -103,11 +215,18 @@ function createDraggableItems() {
         var itemElement = document.createElement('div');
         itemElement.className = 'draggable-item';
         itemElement.draggable = true;
-        itemElement.textContent = item;
-        itemElement.setAttribute('data-item-text', item);
+        itemElement.innerHTML = item.html;
+        itemElement.setAttribute('data-item-text', item.text);
         itemElement.setAttribute('data-item-index', index);
         itemCollection.appendChild(itemElement);
     });
+}
+
+// Helper function to extract formatted item from HTML content
+function extractFormattedItem(htmlContent, targetText) {
+    // Simple approach: return the text as-is for now
+    // In a full implementation, we'd need to parse HTML structure more carefully
+    return targetText;
 }
 
 // Shuffle array utility
@@ -163,6 +282,7 @@ function attachControlEvents() {
 function handleDragStart(e) {
     e.dataTransfer.setData('text/plain', e.target.getAttribute('data-item-text'));
     e.dataTransfer.setData('item-index', e.target.getAttribute('data-item-index'));
+    e.dataTransfer.setData('item-html', e.target.innerHTML);
     e.target.classList.add('dragging');
 }
 
@@ -188,11 +308,12 @@ function handleDrop(e) {
     e.target.classList.remove('drag-over');
     
     var itemText = e.dataTransfer.getData('text/plain');
+    var itemHtml = e.dataTransfer.getData('item-html');
     var itemIndex = e.dataTransfer.getData('item-index');
     var blankId = e.target.getAttribute('data-blank-id');
     
-    // Fill the drop zone
-    e.target.textContent = itemText;
+    // Fill the drop zone with HTML content
+    e.target.innerHTML = itemHtml || itemText;
     e.target.classList.add('filled');
     
     // Mark item as used
@@ -216,10 +337,10 @@ function handleDropZoneClick(e) {
     if (e.target.classList.contains('filled')) {
         // Remove item from drop zone
         var blankId = e.target.getAttribute('data-blank-id');
-        var itemText = e.target.textContent;
+        var itemText = e.target.textContent || e.target.innerText;
         
         // Clear drop zone
-        e.target.textContent = '';
+        e.target.innerHTML = '';
         e.target.classList.remove('filled', 'correct', 'incorrect');
         
         // Unmark item as used
@@ -245,8 +366,9 @@ function showAnswers() {
         var dropZone = exerciseText.querySelector('[data-blank-id="' + blankId + '"]');
         var userAnswer = studyState.userAnswers.get(blankId);
         
-        // Set the correct text
-        dropZone.textContent = correctAnswer;
+        // Set the correct text with HTML formatting if available
+        var formattedAnswer = extractFormattedItem(document.getElementById('question-data').innerHTML, correctAnswer);
+        dropZone.innerHTML = formattedAnswer;
         
         // Apply appropriate styling based on user's original answer
         dropZone.classList.remove('filled', 'correct', 'incorrect', 'auto-filled');

@@ -20,11 +20,48 @@
     var answerDisplay = document.getElementById('answer-display');
     
     if (questionData && answerDisplay) {
-        var content = questionData.textContent.trim();
+        var textContent = questionData.textContent.trim();
+        var innerHTML = questionData.innerHTML.trim();
         
-        if (content && content !== '{{Question}}') {
-            var processed = content.replace(/\[\[d\d+::([^\]]+)\]\]/g, '$1');
-            answerDisplay.textContent = processed;
+        // Use textContent for validation (preserve working logic)
+        if (textContent && textContent !== '{{Question}}') {
+            var htmlProcessingResult = '';
+            var htmlProcessingSuccess = false;
+            var textProcessingResult = '';
+            var textProcessingSuccess = false;
+            
+            // Try HTML processing first if formatting exists
+            try {
+                if (innerHTML && innerHTML !== textContent) {
+                    // HTML formatting exists - use simple regex replacement
+                    var htmlProcessed = innerHTML.replace(/\[\[d\d+::([^\]]+)\]\]/g, '$1');
+                    
+                    if (htmlProcessed !== innerHTML) {
+                        htmlProcessingResult = htmlProcessed;
+                        htmlProcessingSuccess = true;
+                    }
+                }
+            } catch (error) {
+                htmlProcessingSuccess = false;
+            }
+            
+            // Fallback to text processing
+            try {
+                var textProcessed = textContent.replace(/\[\[d\d+::([^\]]+)\]\]/g, '$1');
+                textProcessingResult = textProcessed;
+                textProcessingSuccess = true;
+            } catch (error) {
+                textProcessingSuccess = false;
+            }
+            
+            // Use the best available result
+            if (htmlProcessingSuccess) {
+                answerDisplay.innerHTML = htmlProcessingResult;
+            } else if (textProcessingSuccess) {
+                answerDisplay.textContent = textProcessingResult;
+            } else {
+                answerDisplay.innerHTML = '<em style="color: red;">ERROR: Processing failed</em>';
+            }
         } else {
             answerDisplay.innerHTML = '<em style="color: #666;">No question content found.</em>';
         }
