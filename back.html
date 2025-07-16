@@ -1,13 +1,11 @@
 <div class="answer-container">
-    <!-- Complete text with color-coded answers -->
     <div class="answer-section">
-        <h3>Answer</h3>
-        <div class="answer-text" id="answer-text">
-            <!-- Will be populated by showAnswers() -->
+        <h3>Question</h3>
+        <div class="answer-text">
+            {{Question}}
         </div>
     </div>
     
-    <!-- Explain field (optional) -->
     {{#Explain}}
     <div class="explain-section">
         <h4>Explanation</h4>
@@ -15,34 +13,3 @@
     </div>
     {{/Explain}}
 </div>
-
-<script>
-// Initialize answer display when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    displayAnswers();
-});
-
-// Display answers with color coding
-function displayAnswers() {
-    var questionField = '{{Question}}';
-    var answerTextDiv = document.getElementById('answer-text');
-    
-    // Check if we have valid Question field content
-    if (!questionField || questionField.trim() === '' || questionField === '{{Question}}') {
-        answerTextDiv.innerHTML = '<p style="color: #666; font-style: italic;">No question content found.</p>';
-        return;
-    }
-    
-    // Replace [[dN::text]] syntax with highlighted spans
-    var answerContent = questionField.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num, text) {
-        return '<span class="answer-highlight">' + text + '</span>';
-    });
-    
-    // If no drag-drop syntax found, show original content
-    if (answerContent === questionField) {
-        answerContent = questionField + '<br><br><em style="color: #666;">No drag-drop blanks found in this question.</em>';
-    }
-    
-    answerTextDiv.innerHTML = answerContent;
-}
-</script>
