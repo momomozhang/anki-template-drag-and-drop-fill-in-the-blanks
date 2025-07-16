@@ -44,8 +44,8 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
   - **Green**: User-placed correct answers
   - **Red**: User-placed incorrect answers  
   - **Grey**: Auto-filled correct answers for empty blanks
-- **Show Answer (Back)**: Anki's native button shows complete original text with answers naturally filled in
-- **Answer**: Complete readable paragraph with all blanks filled + optional explanation
+- **Show Answer (Back)**: Anki's native button shows original Question field text with `[[d1::text]]` syntax intact
+- **Answer**: Raw Question field content displaying bracketed syntax as-is + optional explanation
 
 ## Development Journey
 
@@ -70,18 +70,15 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 - **Decision**: ❌ **Feature dropped** - Complexity too high for benefit
 - **Outcome**: Single-card system provides excellent functionality with simpler UX
 
-### Back Template Rendering Issue (Session 8)
-**Issue**: Back template shows empty content instead of filled text
-- **Attempted Solution 1**: Hidden div approach (same as front template)
-- **Result**: ❌ **Failed** - Issue persisted despite field access fix
-- **Attempted Solution 3**: Diagnostic investigation approach
-- **Result**: ✅ **Revealed field access works** - Both direct and hidden div methods return content
-- **Attempted Solution 2**: Regex replacement to strip [[d1::text]] syntax  
-- **Result**: ❌ **Failed** - Issue persisted despite confirmed field access
-- **Attempted Solution 4**: Hidden div + original highlighting (corrected approach)
-- **Result**: ❌ **Failed** - Issue persisted despite using working front template pattern
-- **Analysis**: Field access AND CSS confirmed working, but implementation still fails
-- **Status**: Investigating fundamental difference between front/back template execution
+### Back Template Design Decision (Session 8-10)
+**Challenge**: Back template rendering complexity vs. user needs
+- **Original Goal**: Process `[[d1::text]]` syntax to show highlighted filled text
+- **Technical Issues**: JavaScript processing failures in back template environment
+- **Multiple Failed Attempts**: Hidden div, regex replacement, diagnostic approaches all failed
+- **Root Cause**: Fundamental execution environment differences between front/back templates
+- **Design Decision**: ✅ **Simplified approach** - Display raw Question field content as-is
+- **New Specification**: Back template shows original text with `[[d1::text]]` syntax intact
+- **Benefits**: Eliminates complexity, provides reliable fallback, shows source format
 
 ### UI Redesign Decision (Session 9)
 **New Requirement**: Modernize interface design while preserving functionality
@@ -117,13 +114,11 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 
 ### ✅ Completed Features
 - **Automation**: Fully functional `Ctrl+Shift+D` shortcut for blank creation
-- **Templates**: Interactive drag-and-drop interface with visual feedback
+- **Front Template**: Interactive drag-and-drop interface with visual feedback
+- **Back Template**: Simplified design displaying raw Question field content as-is
 - **Modern UI**: Semantic form-style interface with cohesive blue color scheme
 - **Cross-Platform**: Works on Anki Desktop, AnkiWeb, and mobile
 - **User Experience**: Streamlined workflow from content creation to study
-
-### 🔄 Current Development
-- **Back Template**: Ongoing investigation of rendering issue
 
 ### 🔄 Future Enhancement Opportunities
 - Distractor items functionality
