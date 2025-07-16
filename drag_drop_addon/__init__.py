@@ -42,13 +42,8 @@ def create_drag_drop_blank_minimal(editor):
         
         field_content = editor.note.fields[current_field]
         
-        # Find next available counter (existing logic)
-        pattern = r'\[\[d(\d+)::[^\]]+\]\]'
-        matches = re.findall(pattern, field_content)
-        next_counter = max([int(match) for match in matches]) + 1 if matches else 1
-        
-        # Create the drag-drop syntax
-        wrapped_text = f"[[d{next_counter}::{selected_text}]]"
+        # Create the simplified drag-drop syntax (no numbering needed)
+        wrapped_text = f"[[d::{selected_text}]]"
         
         # Replace selected text using reliable insertText
         js_code = f"""
@@ -93,8 +88,8 @@ def create_drag_drop_blank_minimal(editor):
         def replacement_callback(result):
             if result and result.get('success'):
                 method = result.get('method', 'unknown')
-                tooltip(f"✅ Created d{next_counter}: \"{selected_text[:30]}{'...' if len(selected_text) > 30 else ''}\"", 2000)
-                print(f"Drag-Drop: Success - Created d{next_counter} using {method}")
+                tooltip(f"✅ Created blank: \"{selected_text[:30]}{'...' if len(selected_text) > 30 else ''}\"", 2000)
+                print(f"Drag-Drop: Success - Created blank using {method}")
             else:
                 error = result.get('error', 'Unknown error') if result else 'Replacement failed'
                 showInfo(f"Could not create drag-drop blank: {error}\n\nPlease try selecting the text again.")
