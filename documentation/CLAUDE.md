@@ -158,6 +158,31 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 - **Status**: ❌ **Failed Implementation - Reverted**
 - **Next Steps**: Consider Approach 2 (Backward Compatibility) to support both syntaxes
 
+### ✅ Backward Compatible Syntax Simplification (Session 14)
+**Feature**: Implement `[[d::text]]` syntax with full backward compatibility
+- **Goal**: Support both `[[d1::text]]` (legacy) and `[[d::text]]` (new) syntax simultaneously
+- **Approach**: Version 2 - Smart regex with hybrid ID system
+- **Implementation**:
+  - **Add-on**: Generate `[[d::text]]` syntax (no numbering)
+  - **Smart regex**: Use `(\d*)` pattern to handle both numbered and unnumbered patterns
+  - **ID preservation**: Legacy `[[d1::text]]` keeps original ID `d1`, new `[[d::text]]` gets sequential IDs
+  - **Backward compatibility**: Existing cards continue working unchanged
+- **Technical Details**:
+  - **Front template**: `innerHTML.replace(/\[\[d(\d*)::([^\]]+)\]\]/g, function(match, num, text) { ... })`
+  - **ID generation**: 
+    - Legacy: `if (num && num.length > 0) { blankId = 'd' + num; }`
+    - New: `else { blankId = 'd' + nextAutoId; nextAutoId++; }`
+  - **Back template**: Updated regex to `/\[\[d\d*::([^\]]+)\]\]/g`
+- **Files Modified**:
+  - `drag_drop_addon/__init__.py`: Line 46 - Generate `[[d::text]]` syntax
+  - `front.html`: Lines 89-101, 132-144 - Smart regex processing
+  - `back.html`: Lines 37, 50 - Support both patterns
+- **Benefits**:
+  - **User Experience**: Simplified syntax for new content
+  - **Backward Compatibility**: Existing cards remain functional
+  - **Seamless Migration**: No user action required
+- **Status**: ✅ **Successfully Implemented**
+
 ### ✅ Formatting Preservation Implementation (Session 11)
 **Challenge**: Users reported that HTML formatting (bold, italic, colors) applied in the Question field was lost in both front and back templates.
 
