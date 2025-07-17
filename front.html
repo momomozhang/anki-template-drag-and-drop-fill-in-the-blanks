@@ -28,7 +28,11 @@
     // Global state for drag-and-drop functionality
     var studyState = {
         correctAnswers: new Map(),
-        userAnswers: new Map()
+        userAnswers: new Map(),
+        // Group validation support
+        answerGroups: new Map(),        // groupId → Set of acceptable answers
+        blankGroupMapping: new Map(),   // blankId → groupId
+        validationMode: 'positional'    // 'positional' or 'semantic'
     };
 
 // Initialize study mode
@@ -40,7 +44,14 @@ function initializeStudyMode() {
     attachControlEvents();
 }
 
-// Parse question field and create inline drop zones with HTML formatting preservation
+// HTML sanitization helper function
+function sanitizeHTML(html) {
+    var temp = document.createElement('div');
+    temp.textContent = html;
+    return temp.innerHTML;
+}
+
+// Parse question field and create inline drop zones with semantic validation support
 function parseQuestion() {
     var questionData = document.getElementById('question-data');
     var exerciseText = document.getElementById('exercise-text');
@@ -50,13 +61,7 @@ function parseQuestion() {
         return;
     }
     
-    // Get both content types
     var textContent = questionData.textContent;
-    var innerHTML = questionData.innerHTML;
-    
-    studyState.correctAnswers.clear();
-    
-    // Use textContent for validation (preserve working logic)
     var questionField = textContent;
     
     if (!questionField || questionField.trim() === '' || questionField === '{{Question}}') {
@@ -64,120 +69,94 @@ function parseQuestion() {
         return;
     }
     
-    // Test HTML processing vs text processing
-    var htmlProcessingResult = '';
-    var htmlProcessingSuccess = false;
-    var textProcessingResult = '';
-    var textProcessingSuccess = false;
-    var processingMethod = 'none';
+    // Clear all state
+    studyState.correctAnswers.clear();
+    studyState.answerGroups.clear();
+    studyState.blankGroupMapping.clear();
+    studyState.validationMode = 'positional';
     
-    // Test HTML processing
-    try {
-        if (innerHTML && innerHTML !== textContent) {
-            // HTML formatting exists - use smart regex replacement
-            var htmlAnswers = new Map();
-            var nextAutoId = 1;
-            
-            // Find max existing number first
-            var maxNum = 0;
-            innerHTML.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num) {
-                maxNum = Math.max(maxNum, parseInt(num));
-            });
-            nextAutoId = maxNum + 1;
-            
-            // Process both patterns in one pass
-            var htmlProcessed = innerHTML.replace(/\[\[d(\d*)::([^\]]+)\]\]/g, function(match, num, text) {
-                var blankId;
-                if (num && num.length > 0) {
-                    // Legacy pattern: use original number
-                    blankId = 'd' + num;
-                } else {
-                    // New pattern: generate sequential ID
-                    blankId = 'd' + nextAutoId;
-                    nextAutoId++;
-                }
-                htmlAnswers.set(blankId, text);
-                return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
-            });
-            
-            if (htmlProcessed !== innerHTML) {
-                htmlProcessingResult = htmlProcessed;
-                htmlProcessingSuccess = true;
-                processingMethod = 'html';
-                
-                // Copy HTML answers to global state
-                htmlAnswers.forEach(function(value, key) {
-                    studyState.correctAnswers.set(key, value);
-                });
-            }
-        }
-    } catch (error) {
-        htmlProcessingResult = 'HTML processing error: ' + error.message;
-        htmlProcessingSuccess = false;
-    }
+    // Detect group syntax
+    var hasGroupSyntax = /@\w+/.test(questionField);
     
-    // Test text processing (fallback)
-    try {
-        var textAnswers = new Map();
-        var nextAutoId = 1;
-        
-        // Find max existing number first
-        var maxNum = 0;
-        questionField.replace(/\[\[d(\d+)::([^\]]+)\]\]/g, function(match, num) {
-            maxNum = Math.max(maxNum, parseInt(num));
-        });
-        nextAutoId = maxNum + 1;
-        
-        // Process both patterns in one pass
-        var textProcessed = questionField.replace(/\[\[d(\d*)::([^\]]+)\]\]/g, function(match, num, text) {
-            var blankId;
-            if (num && num.length > 0) {
-                // Legacy pattern: use original number
-                blankId = 'd' + num;
-            } else {
-                // New pattern: generate sequential ID
-                blankId = 'd' + nextAutoId;
-                nextAutoId++;
-            }
-            textAnswers.set(blankId, text);
-            return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
-        });
-        
-        if (textProcessed !== questionField) {
-            textProcessingResult = textProcessed;
-            textProcessingSuccess = true;
-            
-            // Use text answers if HTML processing failed
-            if (!htmlProcessingSuccess) {
-                processingMethod = 'text';
-                textAnswers.forEach(function(value, key) {
-                    studyState.correctAnswers.set(key, value);
-                });
-            }
-        } else {
-            textProcessingResult = questionField + '<br><br><em style="color: #666;">No drag-drop blanks found. Use the add-on to create [[d::text]] syntax.</em>';
-            textProcessingSuccess = true;
-            processingMethod = 'text';
-        }
-    } catch (error) {
-        textProcessingResult = 'Text processing error: ' + error.message;
-        textProcessingSuccess = false;
-    }
-    
-    // Use the best available processing result
-    var finalContent = '';
-    if (htmlProcessingSuccess) {
-        finalContent = htmlProcessingResult;
-    } else if (textProcessingSuccess) {
-        finalContent = textProcessingResult;
+    if (hasGroupSyntax) {
+        studyState.validationMode = 'semantic';
+        parseSemanticQuestion(questionField, exerciseText);
     } else {
-        finalContent = '<p style="color: red;">ERROR: Both processing methods failed</p>';
+        parsePositionalQuestion(questionField, exerciseText);
     }
+}
     
-    exerciseText.innerHTML = finalContent;
+function parseSemanticQuestion(questionField, exerciseText) {
+    var nextAutoId = 1;
+    var groupRegex = /\[\[d(\d*)::([^\]]+)\]\](@\w+)?/g;
+    var match;
+    
+    // First pass: find max existing ID
+    var maxNum = 0;
+    questionField.replace(groupRegex, function(match, num) {
+        if (num && num.length > 0) {
+            maxNum = Math.max(maxNum, parseInt(num));
+        }
+    });
+    nextAutoId = maxNum + 1;
+    
+    // Second pass: process with group support
+    var processedHTML = questionField.replace(groupRegex, function(match, num, answerText, groupSyntax) {
+        var blankId = num && num.length > 0 ? 'd' + num : 'd' + nextAutoId++;
+        
+        // Security fix: sanitize answer text
+        var sanitizedAnswer = sanitizeHTML(answerText);
+        studyState.correctAnswers.set(blankId, sanitizedAnswer);
+        
+        // Handle group syntax
+        if (groupSyntax) {
+            var groupId = groupSyntax.substring(1); // Remove @
+            
+            // Map blank to group
+            studyState.blankGroupMapping.set(blankId, groupId);
+            
+            // Add answer to group
+            if (!studyState.answerGroups.has(groupId)) {
+                studyState.answerGroups.set(groupId, new Set());
+            }
+            studyState.answerGroups.get(groupId).add(sanitizedAnswer);
+        }
+        
+        return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
+    });
+    
+    exerciseText.innerHTML = processedHTML;
 }
 
-// Create draggable items from Question field syntax with HTML formatting preservation
+function parsePositionalQuestion(questionField, exerciseText) {
+    // Existing logic for backward compatibility
+    var nextAutoId = 1;
+    var regex = /\[\[d(\d*)::([^\]]+)\]\]/g;
+    
+    // Find max existing number
+    var maxNum = 0;
+    questionField.replace(regex, function(match, num) {
+        if (num && num.length > 0) {
+            maxNum = Math.max(maxNum, parseInt(num));
+        }
+    });
+    nextAutoId = maxNum + 1;
+    
+    var processedHTML = questionField.replace(regex, function(match, num, answerText) {
+        var blankId = num && num.length > 0 ? 'd' + num : 'd' + nextAutoId++;
+        var sanitizedAnswer = sanitizeHTML(answerText);
+        studyState.correctAnswers.set(blankId, sanitizedAnswer);
+        return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
+    });
+    
+    if (processedHTML === questionField) {
+        processedHTML = questionField + '<br><br><em style="color: #666;">No drag-drop blanks found. Use the add-on to create [[d::text]] syntax.</em>';
+    }
+    
+    exerciseText.innerHTML = processedHTML;
+}
+
+// Create draggable items with group syntax cleaning
 function createDraggableItems() {
     var questionData = document.getElementById('question-data');
     var itemCollection = document.getElementById('item-collection');
@@ -186,54 +165,16 @@ function createDraggableItems() {
         return;
     }
     
-    // Get both content types
-    var textContent = questionData.textContent;
-    var innerHTML = questionData.innerHTML;
-    
-    // Extract items from [[dN::text]] and [[d::text]] syntax
     var items = [];
-    var regex = /\[\[d\d*::([^\]]+)\]\]/g;
+    var itemRegex = /\[\[d(\d*)::([^\]]+)\]\](@\w+)?/g;
+    var questionField = questionData.textContent;
     var match;
     
-    // Try HTML processing first for formatted items
-    var useHtmlFormatting = false;
-    if (innerHTML && innerHTML !== textContent) {
-        try {
-            // Extract items from HTML content
-            var htmlItems = [];
-            var htmlRegex = /\[\[d\d*::([^\]]+)\]\]/g;
-            var htmlMatch;
-            
-            while ((htmlMatch = htmlRegex.exec(innerHTML)) !== null) {
-                var itemText = htmlMatch[1].trim();
-                
-                // Find the formatted version of this item in the HTML
-                var formattedItem = extractFormattedItem(innerHTML, itemText);
-                
-                htmlItems.push({
-                    text: itemText,
-                    html: formattedItem
-                });
-            }
-            
-            if (htmlItems.length > 0) {
-                items = htmlItems;
-                useHtmlFormatting = true;
-            }
-        } catch (error) {
-            // Fall back to text processing if HTML processing fails
-            useHtmlFormatting = false;
-        }
-    }
-    
-    // Fallback to text processing if HTML processing failed or no formatting exists
-    if (!useHtmlFormatting) {
-        while ((match = regex.exec(textContent)) !== null) {
-            items.push({
-                text: match[1].trim(),
-                html: match[1].trim()
-            });
-        }
+    while ((match = itemRegex.exec(questionField)) !== null) {
+        var answerText = match[2];
+        // Clean text - remove group syntax from display, sanitize
+        var cleanText = sanitizeHTML(answerText);
+        items.push(cleanText);
     }
     
     // If no items found, show helpful message
@@ -242,7 +183,8 @@ function createDraggableItems() {
         return;
     }
     
-    // Shuffle items
+    // Remove duplicates and shuffle
+    items = [...new Set(items)];
     items = shuffleArray(items);
     
     // Create draggable elements
@@ -251,19 +193,13 @@ function createDraggableItems() {
         var itemElement = document.createElement('div');
         itemElement.className = 'draggable-item';
         itemElement.draggable = true;
-        itemElement.innerHTML = item.html;
-        itemElement.setAttribute('data-item-text', item.text);
+        itemElement.textContent = item; // Use textContent for security
+        itemElement.setAttribute('data-item-text', item);
         itemElement.setAttribute('data-item-index', index);
         itemCollection.appendChild(itemElement);
     });
 }
 
-// Helper function to extract formatted item from HTML content
-function extractFormattedItem(htmlContent, targetText) {
-    // Simple approach: return the text as-is for now
-    // In a full implementation, we'd need to parse HTML structure more carefully
-    return targetText;
-}
 
 // Shuffle array utility
 function shuffleArray(array) {
@@ -318,7 +254,6 @@ function attachControlEvents() {
 function handleDragStart(e) {
     e.dataTransfer.setData('text/plain', e.target.getAttribute('data-item-text'));
     e.dataTransfer.setData('item-index', e.target.getAttribute('data-item-index'));
-    e.dataTransfer.setData('item-html', e.target.innerHTML);
     e.target.classList.add('dragging');
 }
 
@@ -344,12 +279,11 @@ function handleDrop(e) {
     e.target.classList.remove('drag-over');
     
     var itemText = e.dataTransfer.getData('text/plain');
-    var itemHtml = e.dataTransfer.getData('item-html');
     var itemIndex = e.dataTransfer.getData('item-index');
     var blankId = e.target.getAttribute('data-blank-id');
     
-    // Fill the drop zone with HTML content
-    e.target.innerHTML = itemHtml || itemText;
+    // Security fix: use textContent instead of innerHTML
+    e.target.textContent = itemText;
     e.target.classList.add('filled');
     
     // Mark item as used
@@ -359,8 +293,8 @@ function handleDrop(e) {
         draggedItem.classList.add('used');
     }
     
-    // Store user answer
-    studyState.userAnswers.set(blankId, itemText);
+    // Store user answer (sanitized)
+    studyState.userAnswers.set(blankId, sanitizeHTML(itemText));
     
     // Remove previous answer if any
     var previousItem = itemCollection.querySelector('[data-item-text="' + itemText + '"]');
@@ -376,7 +310,7 @@ function handleDropZoneClick(e) {
         var itemText = e.target.textContent || e.target.innerText;
         
         // Clear drop zone
-        e.target.innerHTML = '';
+        e.target.textContent = '';
         e.target.classList.remove('filled', 'correct', 'incorrect');
         
         // Unmark item as used
@@ -392,19 +326,42 @@ function handleDropZoneClick(e) {
 }
 
 
-// Show answers
+// Enhanced validation with semantic support
+function validateUserAnswer(blankId, userAnswer) {
+    if (studyState.validationMode === 'semantic' && studyState.blankGroupMapping.has(blankId)) {
+        // Semantic validation: check if answer is acceptable for this blank's group
+        var groupId = studyState.blankGroupMapping.get(blankId);
+        var acceptableAnswers = studyState.answerGroups.get(groupId);
+        
+        if (acceptableAnswers && acceptableAnswers.has(userAnswer)) {
+            return true;
+        }
+    }
+    
+    // Positional validation fallback
+    var correctAnswer = studyState.correctAnswers.get(blankId);
+    return userAnswer === correctAnswer;
+}
+
+// Show answers with semantic validation support
 function showAnswers() {
     var exerciseText = document.getElementById('exercise-text');
     var itemCollection = document.getElementById('item-collection');
+    
+    // Hide item collection and show answers button
+    if (itemCollection) itemCollection.style.display = 'none';
+    var showAnswersBtn = document.getElementById('show-answers-btn');
+    if (showAnswersBtn) showAnswersBtn.style.display = 'none';
     
     // Process each blank with appropriate color coding
     studyState.correctAnswers.forEach(function(correctAnswer, blankId) {
         var dropZone = exerciseText.querySelector('[data-blank-id="' + blankId + '"]');
         var userAnswer = studyState.userAnswers.get(blankId);
         
-        // Set the correct text with HTML formatting if available
-        var formattedAnswer = extractFormattedItem(document.getElementById('question-data').innerHTML, correctAnswer);
-        dropZone.innerHTML = formattedAnswer;
+        if (!dropZone) return;
+        
+        // Set the correct answer text (already sanitized)
+        dropZone.textContent = correctAnswer;
         
         // Apply appropriate styling based on user's original answer
         dropZone.classList.remove('filled', 'correct', 'incorrect', 'auto-filled');
@@ -412,12 +369,17 @@ function showAnswers() {
         if (!userAnswer) {
             // Empty blank - show in grey
             dropZone.classList.add('auto-filled');
-        } else if (userAnswer === correctAnswer) {
-            // User was correct - show in green
-            dropZone.classList.add('correct');
         } else {
-            // User was incorrect - show in pink/red
-            dropZone.classList.add('incorrect');
+            // Use enhanced validation
+            var isCorrect = validateUserAnswer(blankId, userAnswer);
+            
+            if (isCorrect) {
+                // User was correct - show in green
+                dropZone.classList.add('correct');
+            } else {
+                // User was incorrect - show in pink/red
+                dropZone.classList.add('incorrect');
+            }
         }
     });
     
