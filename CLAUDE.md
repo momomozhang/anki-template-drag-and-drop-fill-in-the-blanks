@@ -130,20 +130,61 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 
 ### 🐛 Current Known Issues
 
-### ❌ Reset Button State Management Bug (Session 21)
-**Issue**: Reset functionality does not properly restore UI to initial state
-- **Problem**: After clicking "Show Answers" → "Reset", the interface becomes unusable:
-  - "Show Answers" button disappears and doesn't reappear after reset
-  - Draggable items are missing after reset
-  - User cannot retry the exercise
-- **Root Cause**: `resetExercise()` function incomplete state restoration
-- **Impact**: Single-use limitation - card becomes unusable after first attempt
-- **Expected Behavior**: 
-  - Reset should restore all UI elements to initial state
-  - "Show Answers" button should reappear
-  - All draggable items should be restored and functional
-  - User should be able to retry exercise multiple times
-- **Status**: ❌ **Under Investigation** - Reset logic requires debugging and fixes
+### ✅ Draggable Item Box Styling Issue (Session 21-22) - ROOT CAUSE FOUND
+**Issue**: Draggable items do not display as proper rectangular boxes with dynamic width
+- **Problem**: Items are not appearing as button/tag-like elements with content-based width
+- **Expected Appearance**: White rectangular boxes with borders that auto-size to text content
+- **Current State**: Items stacking vertically instead of horizontally flowing in flexbox
+- **Investigation Progress**:
+  - **Initial Analysis**: Identified flexbox container constraint as likely cause
+  - **Attempted Solution**: Added `flex: 0 0 auto` to `.draggable-item` CSS rule
+  - **Result**: ❌ **Failed** - Issue persisted despite flexbox fix
+  - **Additional Changes**: Restored proper white background, border, and padding styles
+- **Status**: ✅ **Root cause identified** - CSS specificity conflict with uiManager inline styles (see Session 22 analysis below)
+
+### ❌ Failed Attempt: Width Constraint Removal (Session 22)
+**Issue**: Items stacking vertically instead of horizontally in flexbox layout
+- **Problem**: Draggable items appearing one per line instead of flowing horizontally
+- **Hypothesis**: `width: fit-content` property conflicting with flexbox layout
+- **Investigation Process**:
+  - **Analysis**: Compared desired vs actual layout screenshots
+  - **Root Cause Theory**: `width: fit-content` forcing items to take full width
+  - **Attempted Solution**: Removed `width: fit-content` from `.draggable-item` 
+  - **Expected Result**: Items should flow horizontally with natural flexbox behavior
+  - **Actual Result**: ❌ **Issue persisted** - Items still stacking vertically
+  - **Conclusion**: Width constraint was not the root cause
+- **Status**: ❌ **Failed** - Reverted change, issue remains unsolved
+- **Next Steps**: Need to investigate other potential causes (DOM structure, container constraints, other CSS conflicts)
+
+### ✅ Root Cause Discovery: CSS Specificity Conflict (Session 22)
+**Issue**: Inline style override destroying flexbox layout
+- **Timeline Analysis**:
+  - **9900a61**: Semantic validation groups merge → **Box styling worked**
+  - **73d1392**: Reset button state management bug fix with centralized UI control → **Layout BROKE**
+  - **fbad0ac**: Attempt to fix draggable item styling → **Still broken**
+- **Root Cause Identified**: `uiManager.setElementVisibility()` method overriding CSS with inline styles
+- **Technical Details**:
+  - **Original CSS**: `.item-collection { display: flex; }` (enables horizontal layout)
+  - **uiManager override**: `element.style.display = 'block'` (inline style, higher specificity)
+  - **CSS Specificity**: Inline styles always override CSS classes
+  - **Layout Consequence**: `display: block` overrides `display: flex`, causing vertical stacking
+- **Why CSS Fixes Failed**: All attempts failed because inline style `element.style.display = 'block'` **always overrides** any CSS `display: flex` rules, regardless of specificity tricks
+- **The Solution**: `setElementVisibility()` method needs to use `display: flex` instead of `display: block` for the `item-collection` element
+- **Status**: ✅ **Root cause confirmed** - CSS specificity conflict with uiManager inline styles
+
+### ✅ Reset Button State Management Bug (Session 21) - RESOLVED
+**Issue**: Reset functionality did not properly restore UI to initial state
+- **Problem**: After clicking "Show Answers" → "Reset", the interface became unusable:
+  - "Show Answers" button disappeared and didn't reappear after reset
+  - Draggable items were missing after reset
+  - User could not retry the exercise
+- **Root Cause**: `showAnswers()` hid elements but `resetStudy()` didn't restore them
+- **Solution**: Implemented hybrid state-action pattern with `uiManager`
+- **Technical Implementation**:
+  - Added centralized UI state control with `uiManager.actions`
+  - `switchToStudyMode()` and `switchToAnswerMode()` handle all UI transitions
+  - Proper element visibility restoration during reset
+- **Status**: ✅ **Resolved** - Reset functionality now works correctly
 
 ### ✅ Enhanced Answer Display (Session 12)
 **Feature**: Enhanced back template with styled blanked-out terms
