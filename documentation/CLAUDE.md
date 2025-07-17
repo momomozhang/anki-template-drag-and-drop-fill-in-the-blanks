@@ -261,13 +261,38 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 - **Integration Testing**: Need to verify both individual components and end-to-end workflow
 
 **Status**: ❌ **Failed Implementation** - Core group validation logic not working correctly
-**Next Steps**: 
-1. Debug why group validation is not being triggered
-2. Fix paragraph break preservation in HTML processing
-3. Verify proper mapping between user inputs and group validation logic
-4. Test end-to-end semantic validation workflow
 
-**Project Status**: Core features complete - semantic validation enhancement requires additional debugging to resolve validation logic and formatting issues.
+### ❌ Second Failed Attempt: Version 2 State-Based Detection (Session 18 continued)
+**Approach**: Complete rewrite using Version 2 State-Based Detection architecture
+- **Implementation**: Clean separation of grouped vs positional parsing paths
+- **Components Added**:
+  - `detectValidationMode()`: Robust `/@(\w+)/g` pattern detection
+  - `parseGroupedQuestion()`: Dedicated group parsing with proper state management
+  - `parsePositionalQuestion()`: Fallback to existing logic
+  - `validateGroupedAnswers()`: Multiset comparison validation
+  - Enhanced `studyState` with group maps and validation mode tracking
+- **Architecture**: Mode detection → route to appropriate parser → mode-aware validation
+
+**Critical Finding**: Implementation still failed despite comprehensive rewrite
+- **Same Symptoms**: Group validation not working, answers still marked incorrect
+- **Root Cause Hypothesis**: Issue may be deeper than parsing/validation logic
+- **Possible Issues**: 
+  - User input collection not matching expected format
+  - DOM element mapping inconsistencies
+  - Validation execution timing problems
+
+**Lessons Learned**:
+- **Feature Complexity**: Multiple implementation approaches failed, suggesting fundamental misunderstanding
+- **Need Debugging**: Requires step-by-step debugging of actual runtime behavior vs expected flow
+- **Implementation vs Integration**: Code structure may be correct but integration points failing
+
+**Status**: ❌ **Failed Implementation** - Second comprehensive attempt unsuccessful
+**Next Steps**: 
+1. Debug runtime execution with console logging to identify actual failure point
+2. Verify user input collection vs validation input expectations
+3. Test individual components in isolation before end-to-end integration
+
+**Project Status**: Core features complete - semantic validation enhancement requires fundamental debugging approach rather than additional implementation attempts.
 
 # AI Collaboration Methodology Documentation
 
