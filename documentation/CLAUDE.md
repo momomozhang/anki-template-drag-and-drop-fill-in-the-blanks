@@ -215,7 +215,59 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 **Current Status**: ✅ **Feature successfully implemented** - HTML formatting preserved in both templates
 **Result**: Bold, italic, colors, and all HTML formatting now maintained throughout the learning experience
 
-**Project Status**: All core features complete - fully production ready with modern UI and reliable templates.
+### ❌ Failed Implementation: Semantic Validation for Interchangeable Blanks (Session 18)
+**Attempted Feature**: User-defined groups for interchangeable blanks using `@groupX` syntax
+- **GitHub Issue**: [Feature: Semantic validation for interchangeable blanks](https://github.com/momomozhang/anki-template-drag-and-drop-fill-in-the-blanks/issues/4)
+- **Goal**: Allow semantically equivalent answers to be interchangeable regardless of position
+- **Proposed Syntax**: `[[d::answer]]@group1` to mark blanks as belonging to the same semantic group
+- **Example**: `"I love both [[d::mangoes]]@group1 and [[d::pineapples]]@group1."` - either answer should work in either blank
+
+**Implementation Approach**: Version 3 Declarative Validation Pipeline
+- **Architecture**: Clean separation of parsing → partitioning → validation
+- **Components**:
+  - `createAnswerValidator()`: Core validation logic with multiset comparison
+  - `parseQuestionWithGroups()`: Enhanced parsing for `@groupX` syntax
+  - `validateWithGroups()`: Group-aware validation logic
+  - `hasGroupSyntax()`: Detection of group syntax in question text
+- **Integration**: Modified `parseQuestion()` and `showAnswers()` to support group validation
+- **Backward Compatibility**: Maintained support for existing `[[d::text]]` positional syntax
+
+**Critical Issues Discovered**:
+1. **Paragraph Break Loss**: 
+   - **Problem**: Multi-paragraph Question field content loses line breaks in front display
+   - **Symptom**: "...simplified syntax.I love both..." (missing space between sentences)
+   - **Root Cause**: HTML processing not preserving newlines/paragraph breaks from Question field
+
+2. **Semantic Validation Failure**:
+   - **Problem**: Group validation logic not working despite successful implementation
+   - **Symptom**: Interchangeable answers marked as incorrect (red styling) when they should be correct
+   - **Test Case**: "mangoes" and "pineapples" both in @group1 should be interchangeable
+   - **Root Cause**: Validation logic falling back to positional validation instead of using group validation
+
+**Technical Analysis**:
+- **Parsing Success**: `@groupX` syntax correctly detected and parsed
+- **UI Generation Success**: Input blanks properly created with group metadata
+- **Item Extraction Success**: All draggable items correctly generated
+- **Validation Failure**: Group validation logic not being triggered or not working correctly
+
+**Files Modified**:
+- `front.html`: Added semantic validation functions and group state management
+- `documentation/CLAUDE.md`: Updated documentation
+
+**Lessons Learned**:
+- **Feature Complexity**: Semantic validation requires precise coordination between parsing, state management, and validation logic
+- **Multi-Issue Debugging**: New features can reveal existing formatting issues that were previously unnoticed
+- **Validation Logic**: Group-based validation requires careful mapping between parsed groups and user input collection
+- **Integration Testing**: Need to verify both individual components and end-to-end workflow
+
+**Status**: ❌ **Failed Implementation** - Core group validation logic not working correctly
+**Next Steps**: 
+1. Debug why group validation is not being triggered
+2. Fix paragraph break preservation in HTML processing
+3. Verify proper mapping between user inputs and group validation logic
+4. Test end-to-end semantic validation workflow
+
+**Project Status**: Core features complete - semantic validation enhancement requires additional debugging to resolve validation logic and formatting issues.
 
 # AI Collaboration Methodology Documentation
 
