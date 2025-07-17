@@ -128,6 +128,23 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 - Advanced formatting options
 - Performance optimizations
 
+### 🐛 Current Known Issues
+
+### ❌ Reset Button State Management Bug (Session 21)
+**Issue**: Reset functionality does not properly restore UI to initial state
+- **Problem**: After clicking "Show Answers" → "Reset", the interface becomes unusable:
+  - "Show Answers" button disappears and doesn't reappear after reset
+  - Draggable items are missing after reset
+  - User cannot retry the exercise
+- **Root Cause**: `resetExercise()` function incomplete state restoration
+- **Impact**: Single-use limitation - card becomes unusable after first attempt
+- **Expected Behavior**: 
+  - Reset should restore all UI elements to initial state
+  - "Show Answers" button should reappear
+  - All draggable items should be restored and functional
+  - User should be able to retry exercise multiple times
+- **Status**: ❌ **Under Investigation** - Reset logic requires debugging and fixes
+
 ### ✅ Enhanced Answer Display (Session 12)
 **Feature**: Enhanced back template with styled blanked-out terms
 - **Goal**: In back template, show complete answer text with original blank items highlighted
