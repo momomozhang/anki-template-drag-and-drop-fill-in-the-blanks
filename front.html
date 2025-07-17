@@ -51,6 +51,48 @@ function sanitizeHTML(html) {
     return temp.innerHTML;
 }
 
+// Preserve paragraph breaks from HTML formatting
+function preserveParagraphBreaks(textContent, innerHTML) {
+    if (!innerHTML || innerHTML === textContent) {
+        return textContent;
+    }
+    
+    try {
+        // Simple DOM approach: create element and extract with preserved spacing
+        var temp = document.createElement('div');
+        temp.innerHTML = innerHTML;
+        
+        // Walk through child nodes and preserve paragraph boundaries
+        var result = '';
+        var children = temp.childNodes;
+        
+        for (var i = 0; i < children.length; i++) {
+            var node = children[i];
+            
+            if (node.nodeType === Node.TEXT_NODE) {
+                result += node.textContent;
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                var tagName = node.tagName.toLowerCase();
+                
+                if (tagName === 'p' || tagName === 'div') {
+                    if (result && !result.endsWith('\n\n')) {
+                        result += '\n\n';
+                    }
+                    result += node.textContent;
+                } else if (tagName === 'br') {
+                    result += '\n';
+                } else {
+                    result += node.textContent;
+                }
+            }
+        }
+        
+        return result;
+    } catch (error) {
+        return textContent;
+    }
+}
+
 // Parse question field and create inline drop zones with semantic validation support
 function parseQuestion() {
     var questionData = document.getElementById('question-data');
@@ -62,7 +104,10 @@ function parseQuestion() {
     }
     
     var textContent = questionData.textContent;
-    var questionField = textContent;
+    var innerHTML = questionData.innerHTML;
+    
+    // Enhanced text with paragraph breaks preserved
+    var questionField = preserveParagraphBreaks(textContent, innerHTML);
     
     if (!questionField || questionField.trim() === '' || questionField === '{{Question}}') {
         exerciseText.innerHTML = '<p style="color: #666; font-style: italic;">No question content found. Please add content to your Question field.</p>';
@@ -125,6 +170,9 @@ function parseSemanticQuestion(questionField, exerciseText) {
         return '<span class="answer-input" data-blank-id="' + blankId + '"></span>';
     });
     
+    // Convert newlines to HTML breaks
+    processedHTML = processedHTML.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+    
     exerciseText.innerHTML = processedHTML;
 }
 
@@ -152,6 +200,9 @@ function parsePositionalQuestion(questionField, exerciseText) {
     if (processedHTML === questionField) {
         processedHTML = questionField + '<br><br><em style="color: #666;">No drag-drop blanks found. Use the add-on to create [[d::text]] syntax.</em>';
     }
+    
+    // Convert newlines to HTML breaks
+    processedHTML = processedHTML.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
     
     exerciseText.innerHTML = processedHTML;
 }
