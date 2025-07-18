@@ -122,8 +122,11 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 - **User Experience**: Streamlined workflow from content creation to study
 - **Semantic Validation**: Interchangeable blanks using `@groupX` syntax for semantically equivalent answers
 - **Paragraph Break Preservation**: DOM-based processing maintains paragraph structure in multi-paragraph content
+- **Direct Inter-Container Movement**: Items can be dragged directly between input containers without intermediate panel return
 
-### 🔄 Future Enhancement Opportunities
+### 🔄 Current Issues & Future Enhancements
+
+#### 🔮 Future Enhancement Opportunities
 - Distractor items functionality
 - Advanced formatting options
 - Performance optimizations
@@ -140,6 +143,22 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
   - **Change**: `innerHTML.replace(/\[\[d\d+::([^\]]+)\]\]/g, '<strong style="color: #1565c0;">$1</strong>')`
   - **Color**: `#1565c0` (matches theme color from `.answer-input.filled`)
   - **Integration**: Seamlessly works with existing dual processing architecture
+- **Status**: ✅ **Successfully Implemented**
+
+### ✅ Group Syntax Removal from Back Template (Session 24)
+**Feature**: Remove `@groupN` syntax from back template display
+- **Goal**: Strip `@groupN` syntax from back template while preserving answer highlighting
+- **Problem**: With semantic validation feature, syntax like `[[d::mangoes]]@group1` displayed as "**mangoes@group1**" instead of "**mangoes**"
+- **Solution**: Extended regex pattern to match optional `@groupN` syntax but exclude from replacement
+- **Implementation**: 
+  - **HTML Processing**: `innerHTML.replace(/\[\[d\d*::([^\]]+)\]\](@\w+)?/g, '<strong style="color: #1565c0;">$1</strong>')`
+  - **Text Processing**: `textContent.replace(/\[\[d\d*::([^\]]+)\]\](@\w+)?/g, '$1')`
+- **Technical Details**:
+  - **Files**: `back.html:37, back.html:50`
+  - **Pattern**: Added `(@\w+)?` to existing regex to optionally match group syntax
+  - **Backward Compatibility**: Works with both `[[d::text]]` and `[[d::text]]@group1` formats
+  - **Consistency**: Uses same `@\w+` pattern as front template for validation
+- **Result**: Clean answer display with proper highlighting, no visible group syntax
 - **Status**: ✅ **Successfully Implemented**
 
 ### ❌ Initial Simplified Syntax Implementation Attempt (Session 13)
@@ -276,6 +295,36 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 - `documentation/CLAUDE.md`: Updated documentation
 
 **Status**: ✅ **Successfully Implemented** - Paragraph breaks preserved correctly
+
+### ✅ Successful Implementation: Direct Inter-Container Movement (Session 25)
+**Feature**: Container-to-container drag-and-drop functionality using event delegation pattern
+- **GitHub Issue**: Users can now drag items directly between input containers
+- **Goal**: Eliminate the need for intermediate panel return when moving items between containers
+- **Problem**: Original implementation created event handler timing issues and conflicts
+
+**Implementation**: Version 1C - Event Delegation Pattern
+- **Architecture**: Centralized event management with single delegation handler
+- **Enhanced Event Handling**: 
+  - `handleDelegatedDragStart()`: Validates targets and routes to appropriate handlers
+  - `handlePanelDrag()`: Handles drag operations from item panel
+  - `handleContainerDrag()`: Handles drag operations from filled containers
+  - `handleDelegatedDragEnd()`: Centralized cleanup
+- **Performance Optimizations**: Single event listener eliminates timing issues and memory leaks
+- **Error Handling**: Comprehensive validation and error logging
+
+**Key Features**:
+- **Event Delegation**: Single `document.addEventListener()` handles all drag events
+- **Robust Validation**: Comprehensive checks for event targets and data transfer
+- **Error Handling**: Proper try-catch blocks with console warnings
+- **Performance**: Eliminates repeated event listener attachment/removal
+- **Security**: Maintains all existing HTML sanitization
+- **Backward Compatibility**: Preserves existing click-to-return functionality
+
+**Files Modified**:
+- `front.html`: Complete event delegation system implementation
+- `documentation/CLAUDE.md`: Updated documentation
+
+**Status**: ✅ **Successfully Implemented** - Direct inter-container movement working correctly
 
 ## Deep Analysis: Parsing-Validation Gap Investigation (Session 19)
 
