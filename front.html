@@ -341,19 +341,15 @@ function resetStudyState() {
     studyState.userAnswers.clear();
 }
 
-// Attach drag and drop events
+// Attach drag and drop events using event delegation
 function attachDragAndDropEvents() {
-    var itemCollection = document.getElementById('item-collection');
     var exerciseText = document.getElementById('exercise-text');
     
-    // Draggable items events
-    var items = itemCollection.querySelectorAll('.draggable-item');
-    for (var i = 0; i < items.length; i++) {
-        items[i].addEventListener('dragstart', handleDragStart);
-        items[i].addEventListener('dragend', handleDragEnd);
-    }
+    // Single delegated drag handler for entire interface
+    document.addEventListener('dragstart', handleDelegatedDragStart, true);
+    document.addEventListener('dragend', handleDelegatedDragEnd, true);
     
-    // Drop zones events
+    // Drop zones events (unchanged)
     var dropZones = exerciseText.querySelectorAll('.answer-input');
     for (var i = 0; i < dropZones.length; i++) {
         dropZones[i].addEventListener('dragover', handleDragOver);
@@ -361,9 +357,6 @@ function attachDragAndDropEvents() {
         dropZones[i].addEventListener('dragleave', handleDragLeave);
         dropZones[i].addEventListener('drop', handleDrop);
         dropZones[i].addEventListener('click', handleDropZoneClick);
-        // Enable dragging for filled containers
-        dropZones[i].addEventListener('dragstart', handleDragStart);
-        dropZones[i].addEventListener('dragend', handleDragEnd);
     }
 }
 
@@ -376,28 +369,79 @@ function attachControlEvents() {
     resetBtn.addEventListener('click', resetStudy);
 }
 
-// Drag and drop event handlers
-function handleDragStart(e) {
-    var itemText = e.target.textContent || e.target.getAttribute('data-item-text');
-    var itemIndex = e.target.getAttribute('data-item-index');
-    
-    e.dataTransfer.setData('text/plain', itemText);
-    e.dataTransfer.setData('item-index', itemIndex);
-    
-    // Detect if dragging from container vs panel
-    var sourceContainer = e.target.closest('.answer-input');
-    if (sourceContainer) {
-        e.dataTransfer.setData('source-container', sourceContainer.getAttribute('data-blank-id'));
-    } else {
-        e.dataTransfer.setData('source-container', 'panel');
+// Event delegation pattern for drag operations
+function handleDelegatedDragStart(e) {
+    // Validate event target
+    if (!e.target || !e.dataTransfer) {
+        console.warn('Invalid drag event target');
+        return false;
     }
     
-    e.target.classList.add('dragging');
+    // Handle panel items
+    if (e.target.classList.contains('draggable-item')) {
+        return handlePanelDrag(e);
+    }
+    // Handle filled containers
+    else if (e.target.classList.contains('filled') && e.target.hasAttribute('data-blank-id')) {
+        return handleContainerDrag(e);
+    }
+    // Reject invalid drag attempts
+    else {
+        e.preventDefault();
+        return false;
+    }
 }
 
-function handleDragEnd(e) {
-    e.target.classList.remove('dragging');
+// Handle dragging from panel items
+function handlePanelDrag(e) {
+    var itemText = e.target.getAttribute('data-item-text');
+    var itemIndex = e.target.getAttribute('data-item-index');
+    
+    if (!itemText || !itemIndex) {
+        console.warn('Panel item missing required data attributes');
+        return false;
+    }
+    
+    try {
+        e.dataTransfer.setData('text/plain', itemText);
+        e.dataTransfer.setData('item-index', itemIndex);
+        e.dataTransfer.setData('source-container', 'panel');
+        e.target.classList.add('dragging');
+        return true;
+    } catch (error) {
+        console.error('Panel drag data transfer failed:', error);
+        return false;
+    }
 }
+
+// Handle dragging from filled containers
+function handleContainerDrag(e) {
+    var itemText = e.target.textContent;
+    var sourceContainer = e.target.getAttribute('data-blank-id');
+    
+    if (!itemText || !sourceContainer) {
+        console.warn('Filled container missing required data');
+        return false;
+    }
+    
+    try {
+        e.dataTransfer.setData('text/plain', itemText);
+        e.dataTransfer.setData('source-container', sourceContainer);
+        e.target.classList.add('dragging');
+        return true;
+    } catch (error) {
+        console.error('Container drag data transfer failed:', error);
+        return false;
+    }
+}
+
+// Delegated drag end handler
+function handleDelegatedDragEnd(e) {
+    if (e.target) {
+        e.target.classList.remove('dragging');
+    }
+}
+
 
 function handleDragOver(e) {
     e.preventDefault();
@@ -458,7 +502,7 @@ function handlePanelToContainer(blankId, itemText, itemIndex) {
         // Security fix: use textContent instead of innerHTML
         targetContainer.textContent = itemText;
         targetContainer.classList.add('filled');
-        targetContainer.draggable = true;
+        targetContainer.draggable = true; // Enable dragging - delegation handles events
     }
     
     // Mark item as used
