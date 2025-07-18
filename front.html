@@ -358,6 +358,13 @@ function attachDragAndDropEvents() {
         dropZones[i].addEventListener('drop', handleDrop);
         dropZones[i].addEventListener('click', handleDropZoneClick);
     }
+    
+    // Add panel drop support with error handling
+    var itemCollection = document.getElementById('item-collection');
+    if (itemCollection) {
+        itemCollection.addEventListener('dragover', handlePanelDragOver);
+        itemCollection.addEventListener('drop', handlePanelDrop);
+    }
 }
 
 // Attach control events
@@ -542,6 +549,56 @@ function handleDropZoneClick(e) {
         
         // Remove from user answers
         studyState.userAnswers.delete(blankId);
+    }
+}
+
+function handlePanelDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+// Robust panel drop handler with browser compatibility
+function handlePanelDrop(e) {
+    e.preventDefault();
+    
+    var itemText, sourceContainer;
+    
+    // Robust data transfer with fallback
+    try {
+        itemText = e.dataTransfer.getData('text/plain');
+        sourceContainer = e.dataTransfer.getData('source-container');
+    } catch (error) {
+        console.warn('Data transfer access failed:', error);
+        return;
+    }
+    
+    // Validate data
+    if (!itemText || !sourceContainer || sourceContainer === 'panel') {
+        return; // Only handle container-to-panel moves
+    }
+    
+    handleContainerToPanel(sourceContainer, itemText);
+}
+
+// Robust container-to-panel handler
+function handleContainerToPanel(sourceBlankId, itemText) {
+    // Sanitize early
+    var sanitizedText = sanitizeHTML(itemText);
+    
+    // Clear source container
+    var sourceContainer = document.querySelector('[data-blank-id="' + sourceBlankId + '"]');
+    if (sourceContainer) {
+        sourceContainer.textContent = '';
+        sourceContainer.classList.remove('filled');
+        sourceContainer.draggable = false;
+        studyState.userAnswers.delete(sourceBlankId);
+    }
+    
+    // Restore item in panel
+    var itemCollection = document.getElementById('item-collection');
+    var item = itemCollection.querySelector('[data-item-text="' + sanitizedText + '"]');
+    if (item) {
+        item.classList.remove('used');
     }
 }
 
