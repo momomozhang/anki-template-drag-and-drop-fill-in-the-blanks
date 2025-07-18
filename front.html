@@ -5,17 +5,17 @@
             <!-- Text with form-like input elements -->
         </div>
         
+        <!-- Available Items - positioned below exercise text -->
+        <aside class="item-bank">
+            <div class="item-collection" id="item-collection">
+                <!-- Draggable items in rectangular box layout -->
+            </div>
+        </aside>
+        
         <div class="exercise-controls">
             <button class="action-btn primary" id="show-answers-btn">Show Answers</button>
             <button class="action-btn secondary" id="reset-btn">Reset</button>
         </div>
-        
-        <!-- Available Items - positioned below buttons -->
-        <aside class="item-bank">
-            <div class="item-collection" id="item-collection">
-                <!-- Draggable items in horizontal layout -->
-            </div>
-        </aside>
     </main>
 </div>
 
@@ -35,6 +35,77 @@
         validationMode: 'positional'    // 'positional' or 'semantic'
     };
 
+// UI Manager for centralized UI state control
+var uiManager = {
+    mode: 'study',
+    
+    actions: {
+        switchToStudyMode: function() {
+            uiManager.mode = 'study';
+            uiManager.showStudyElements();
+            uiManager.clearAnswerStates();
+            uiManager.enableItems();
+        },
+        
+        switchToAnswerMode: function() {
+            uiManager.mode = 'answers';
+            uiManager.hideStudyElements();
+            uiManager.disableItems();
+        },
+        
+        reset: function() {
+            uiManager.actions.switchToStudyMode();
+        }
+    },
+    
+    showStudyElements: function() {
+        this.setElementVisibility('show-answers-btn', 'block');
+        this.setElementVisibility('item-collection', 'block');
+        this.setElementVisibility('.item-bank', 'block');
+    },
+    
+    hideStudyElements: function() {
+        this.setElementVisibility('show-answers-btn', 'none');
+        this.setElementVisibility('item-collection', 'none');
+    },
+    
+    setElementVisibility: function(selector, display) {
+        var element = selector.startsWith('.') ? 
+            document.querySelector(selector) : 
+            document.getElementById(selector);
+        
+        if (element) {
+            // Special case: item-collection needs flex for horizontal layout
+            if (selector === 'item-collection' && display === 'block') {
+                element.style.display = 'flex';
+            } else {
+                element.style.display = display;
+            }
+        }
+    },
+    
+    clearAnswerStates: function() {
+        var dropZones = document.querySelectorAll('.answer-input');
+        for (var i = 0; i < dropZones.length; i++) {
+            dropZones[i].classList.remove('correct', 'incorrect', 'auto-filled');
+        }
+    },
+    
+    enableItems: function() {
+        var items = document.querySelectorAll('.draggable-item');
+        for (var i = 0; i < items.length; i++) {
+            items[i].classList.remove('used');
+        }
+    },
+    
+    disableItems: function() {
+        var items = document.querySelectorAll('.draggable-item');
+        for (var i = 0; i < items.length; i++) {
+            items[i].classList.add('used');
+        }
+    }
+};
+
 // Initialize study mode
 function initializeStudyMode() {
     parseQuestion();
@@ -42,6 +113,7 @@ function initializeStudyMode() {
     resetStudyState();
     attachDragAndDropEvents();
     attachControlEvents();
+    uiManager.actions.switchToStudyMode();
 }
 
 // HTML sanitization helper function
@@ -396,62 +468,34 @@ function validateUserAnswer(blankId, userAnswer) {
 
 // Show answers with semantic validation support
 function showAnswers() {
-    var exerciseText = document.getElementById('exercise-text');
-    var itemCollection = document.getElementById('item-collection');
+    uiManager.actions.switchToAnswerMode();
     
-    // Hide item collection and show answers button
-    if (itemCollection) itemCollection.style.display = 'none';
-    var showAnswersBtn = document.getElementById('show-answers-btn');
-    if (showAnswersBtn) showAnswersBtn.style.display = 'none';
+    var exerciseText = document.getElementById('exercise-text');
+    if (!exerciseText) return;
     
     // Process each blank with appropriate color coding
     studyState.correctAnswers.forEach(function(correctAnswer, blankId) {
         var dropZone = exerciseText.querySelector('[data-blank-id="' + blankId + '"]');
-        var userAnswer = studyState.userAnswers.get(blankId);
-        
         if (!dropZone) return;
         
-        // Set the correct answer text (already sanitized)
-        dropZone.textContent = correctAnswer;
+        var userAnswer = studyState.userAnswers.get(blankId);
         
-        // Apply appropriate styling based on user's original answer
+        dropZone.textContent = correctAnswer;
         dropZone.classList.remove('filled', 'correct', 'incorrect', 'auto-filled');
         
         if (!userAnswer) {
-            // Empty blank - show in grey
             dropZone.classList.add('auto-filled');
         } else {
-            // Use enhanced validation
             var isCorrect = validateUserAnswer(blankId, userAnswer);
-            
-            if (isCorrect) {
-                // User was correct - show in green
-                dropZone.classList.add('correct');
-            } else {
-                // User was incorrect - show in pink/red
-                dropZone.classList.add('incorrect');
-            }
+            dropZone.classList.add(isCorrect ? 'correct' : 'incorrect');
         }
     });
-    
-    // Mark all items as used
-    var items = itemCollection.querySelectorAll('.draggable-item');
-    for (var i = 0; i < items.length; i++) {
-        items[i].classList.add('used');
-    }
 }
 
 
 // Reset study
 function resetStudy() {
-    // Re-initialize entire study mode to restore original state
     initializeStudyMode();
-    
-    // Ensure item bank is visible
-    var itemBank = document.querySelector('.item-bank');
-    if (itemBank) {
-        itemBank.style.display = 'block';
-    }
 }
 
 // Initialize immediately - no event waiting
