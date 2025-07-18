@@ -361,6 +361,9 @@ function attachDragAndDropEvents() {
         dropZones[i].addEventListener('dragleave', handleDragLeave);
         dropZones[i].addEventListener('drop', handleDrop);
         dropZones[i].addEventListener('click', handleDropZoneClick);
+        // Enable dragging for filled containers
+        dropZones[i].addEventListener('dragstart', handleDragStart);
+        dropZones[i].addEventListener('dragend', handleDragEnd);
     }
 }
 
@@ -375,8 +378,20 @@ function attachControlEvents() {
 
 // Drag and drop event handlers
 function handleDragStart(e) {
-    e.dataTransfer.setData('text/plain', e.target.getAttribute('data-item-text'));
-    e.dataTransfer.setData('item-index', e.target.getAttribute('data-item-index'));
+    var itemText = e.target.textContent || e.target.getAttribute('data-item-text');
+    var itemIndex = e.target.getAttribute('data-item-index');
+    
+    e.dataTransfer.setData('text/plain', itemText);
+    e.dataTransfer.setData('item-index', itemIndex);
+    
+    // Detect if dragging from container vs panel
+    var sourceContainer = e.target.closest('.answer-input');
+    if (sourceContainer) {
+        e.dataTransfer.setData('source-container', sourceContainer.getAttribute('data-blank-id'));
+    } else {
+        e.dataTransfer.setData('source-container', 'panel');
+    }
+    
     e.target.classList.add('dragging');
 }
 
@@ -403,11 +418,48 @@ function handleDrop(e) {
     
     var itemText = e.dataTransfer.getData('text/plain');
     var itemIndex = e.dataTransfer.getData('item-index');
+    var sourceContainer = e.dataTransfer.getData('source-container');
     var blankId = e.target.getAttribute('data-blank-id');
     
-    // Security fix: use textContent instead of innerHTML
-    e.target.textContent = itemText;
-    e.target.classList.add('filled');
+    // Handle container-to-container movement
+    if (sourceContainer && sourceContainer !== 'panel') {
+        handleContainerToContainer(sourceContainer, blankId, itemText);
+    } else {
+        handlePanelToContainer(blankId, itemText, itemIndex);
+    }
+}
+
+// Handle container-to-container moves with state management
+function handleContainerToContainer(sourceBlankId, targetBlankId, itemText) {
+    // Clear source container
+    var sourceContainer = document.querySelector('[data-blank-id="' + sourceBlankId + '"]');
+    if (sourceContainer) {
+        sourceContainer.textContent = '';
+        sourceContainer.classList.remove('filled');
+        sourceContainer.draggable = false;
+        studyState.userAnswers.delete(sourceBlankId);
+    }
+    
+    // Fill target container
+    var targetContainer = document.querySelector('[data-blank-id="' + targetBlankId + '"]');
+    if (targetContainer) {
+        // Security fix: use textContent instead of innerHTML
+        targetContainer.textContent = itemText;
+        targetContainer.classList.add('filled');
+        targetContainer.draggable = true;
+        studyState.userAnswers.set(targetBlankId, sanitizeHTML(itemText));
+    }
+}
+
+// Handle panel-to-container moves (original logic)
+function handlePanelToContainer(blankId, itemText, itemIndex) {
+    var targetContainer = document.querySelector('[data-blank-id="' + blankId + '"]');
+    if (targetContainer) {
+        // Security fix: use textContent instead of innerHTML
+        targetContainer.textContent = itemText;
+        targetContainer.classList.add('filled');
+        targetContainer.draggable = true;
+    }
     
     // Mark item as used
     var itemCollection = document.getElementById('item-collection');
@@ -435,6 +487,7 @@ function handleDropZoneClick(e) {
         // Clear drop zone
         e.target.textContent = '';
         e.target.classList.remove('filled', 'correct', 'incorrect');
+        e.target.draggable = false;
         
         // Unmark item as used
         var itemCollection = document.getElementById('item-collection');
