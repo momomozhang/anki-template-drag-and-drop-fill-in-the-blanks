@@ -190,9 +190,8 @@ function parseQuestion() {
     var textContent = questionData.textContent;
     var innerHTML = questionData.innerHTML;
     
-    // TEMPORARY: Skip paragraph processing for maximum Anki compatibility
-    // Use textContent directly until paragraph processing is fully debugged
-    var questionField = textContent;
+    // Enhanced text with paragraph breaks preserved (re-enabled after validation bug fix)
+    var questionField = preserveParagraphBreaks(textContent, innerHTML);
     
     
     // Simplified validation - only check for truly empty content
