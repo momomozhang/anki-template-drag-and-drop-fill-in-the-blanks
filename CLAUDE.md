@@ -516,6 +516,87 @@ This session represents a **paradigm shift** in our debugging methodology, achie
 
 **Status**: ✅ **METHODOLOGY BREAKTHROUGH** - Replicable systematic debugging approach proven successful
 
+### ❌ **FAILED ATTEMPT**: HTML Formatting Preservation (Session 31+)
+
+#### 📋 **Issue Description**
+**User Request**: "When I format the texts in 'Question field', the formatting do not show on front side. It shows correctly on the back side."
+- **Problem**: HTML formatting (bold, italic, colors) lost in front template, preserved in back template
+- **Goal**: Restore formatting display while preserving all existing functionality
+
+#### 🔍 **Failed Implementation Attempt**
+**Approach**: Single function addition (`restoreDisplayFormatting()`) with minimal integration
+**Strategy**: Preserve existing functionality, restore formatting at display time only
+
+**Technical Implementation**:
+- **Added**: `restoreDisplayFormatting(processedHTML, originalHTML)` function  
+- **Integration**: Two-line changes at display points (lines 306, 337)
+- **Logic**: Extract input elements from processed HTML, map to original HTML formatting
+
+#### ❌ **Critical Failures Identified**
+
+**1. Anki Desktop Compatibility Failure**: 
+- **Issue**: Template displays completely empty/blank in Anki Desktop
+- **Impact**: CRITICAL - Template unusable, breaks all functionality
+- **Cause**: Anki environment differences not accounted for in implementation
+
+**2. Partial Test Failures**:
+- **Bold/Italic**: Formatting detection failed (❌ FAIL)
+- **Color Styling**: Worked correctly (✅ PASS)  
+- **Multi-paragraph**: Worked correctly (✅ PASS)
+- **Input Elements**: All tests preserved correct number of inputs (✅)
+
+#### 🔬 **Root Cause Analysis**
+**Primary Issue**: **Anki Environment Incompatibility**
+- **Evidence**: Function worked in standalone testing but failed in Anki Desktop
+- **Pattern**: Similar to Session 30 debugging - Anki environment behaves differently than standard HTML
+- **Critical Mistake**: Did not account for Anki's JavaScript execution context differences
+
+**Secondary Issues**: 
+- **Text Mapping Logic**: Complex text-to-formatting mapping had edge cases
+- **DOM Manipulation**: Anki's DOM handling may differ from standard web browsers
+- **Regex Complexity**: Some formatting patterns not properly detected in Anki context
+
+#### 📊 **Emergency Recovery Actions**
+**Immediate Rollback**: ✅ **COMPLETED**
+- **Command**: `git reset --hard 65b0d62` 
+- **Target**: Last known working state (post-Session 31 success)
+- **Result**: Template functionality fully restored
+- **Validation**: All previous achievements preserved (duplicates, paragraphs, advanced features)
+
+#### 💡 **Critical Lessons Learned**
+
+**1. Anki Environment Testing is Mandatory**:
+- Standalone HTML testing is insufficient for Anki templates
+- Must test in actual Anki Desktop before any commits
+- Anki's JavaScript execution context differs significantly from browsers
+
+**2. Session 30 Pattern Repeated**:
+- Same lesson as Session 30 - Anki environment behaves uniquely
+- Previous success with `preserveParagraphBreaks()` required extensive Anki-specific safety measures
+- Complex DOM manipulation approaches are high-risk in Anki
+
+**3. Session 31 Methodology Lessons**:
+- ✅ Evidence-based analysis (correctly identified root cause)
+- ✅ Minimal intervention approach (single function addition)
+- ❌ Insufficient validation (critical failure - didn't test in Anki Desktop)
+- ✅ Immediate rollback capability (successfully restored functionality)
+
+#### 🚀 **Strategic Decision**
+**Current Status**: **Template Stability Prioritized Over Formatting Enhancement**
+
+**Rationale**:
+- Template is fully functional without formatting (acceptable user experience)
+- All critical features working: duplicates, paragraphs, semantic validation, bidirectional drag
+- Formatting is "nice-to-have" not "must-have" for core educational functionality
+- Risk/benefit analysis favors stability over enhancement
+
+**Future Considerations**: 
+- If attempting again, require Anki Desktop validation at every step
+- Consider ultra-conservative approaches or alternative architectural strategies
+- User-side formatting solutions may be safer than template-side processing
+
+**Status**: ✅ **RECOVERY COMPLETE** - Template restored to full functionality with comprehensive failure analysis documented
+
 ### 📋 Comprehensive Implementation Plan (Session 31)
 **Objective**: Fix duplicate item display and multi-paragraph line break loss using Claude Code best practices
 - **Approach**: Count-aware deduplication with text processing consistency (Approach B from analysis)
