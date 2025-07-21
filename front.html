@@ -149,8 +149,8 @@ function preserveParagraphBreaks(textContent, innerHTML) {
         result = result.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, '\n\n');
         result = result.replace(/<br\s*\/?>/gi, '\n');
         
-        // Simple tag removal
-        result = result.replace(/<[^>]+>/g, '');
+        // Selective tag removal: preserve formatting tags, strip structural tags
+        result = result.replace(/<(?!\/?(?:b|strong|i|em|u)\b)(?!span\s+[^>]*style=)[^>]*>/gi, '');
         
         // Basic entity decoding
         result = result.replace(/&nbsp;/g, ' ');
