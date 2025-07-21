@@ -23,8 +23,8 @@
         var textContent = questionData.textContent.trim();
         var innerHTML = questionData.innerHTML.trim();
         
-        // Use textContent for validation (preserve working logic)
-        if (textContent && textContent !== '{{Question}}') {
+        // Simplified validation - only check for truly empty content (same fix as front template)
+        if (textContent && textContent.trim() !== '') {
             var htmlProcessingResult = '';
             var htmlProcessingSuccess = false;
             var textProcessingResult = '';

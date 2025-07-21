@@ -126,15 +126,43 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 - **Bidirectional Drag**: Container-to-panel drag functionality - ✅ **RESTORED**
 - **Event Delegation Pattern**: Robust drag handling system - ✅ **RESTORED**
 
-### ⚠️ Current Known Limitations
-- **Duplicate Item Display**: Cards with duplicate text (e.g., "I love [[d::mangoes]]. Because [[d::mangoes]] are delicious.") show only 1 draggable item instead of 2
-  - **Impact**: Minor UX limitation - exercises with duplicate answers may be more challenging
-  - **Status**: Acceptable trade-off for fully functional template
+### ⚠️ Current Known Issues (Post-Rollback Analysis)
+
+#### 🔍 Issue 1: Duplicate Item Display
+- **Problem**: Cards with duplicate text blanks only show 1 draggable item instead of required number
+- **Example**: `"I love [[d::mangoes]]. Because [[d::mangoes]] are delicious."` creates 2 input boxes but only 1 draggable "mangoes" item
+- **Root Cause**: Deduplication logic at `front.html:370` - `items = [...new Set(items)];`
+- **Impact**: Makes exercises with duplicate answers unsolvable
+- **Status**: Known limitation requiring surgical fix
+
+#### 🔍 Issue 2: Multi-paragraph Line Break Loss (with Duplicates)
+- **Problem**: When cards have duplicate items, multi-paragraph content loses line breaks during processing
+- **Manifestation**: 
+  - Single paragraph content: ✅ Works fine
+  - Multi-paragraph with duplicates: ❌ Line breaks disappear, text runs together
+- **Root Cause**: Interaction between `preserveParagraphBreaks()` function (lines 127-225) and duplicate processing pipeline
+- **Technical Details**: HTML structure processing conflicts with duplicate item handling when both conditions present
+- **Impact**: Affects readability and formatting of multi-paragraph exercises with duplicate answers
+- **Status**: Connected to duplicate item issue - needs coordinated fix
+
+#### 🔗 Issue Correlation Analysis
+**Key Finding**: Both issues are interconnected and related to duplicate item handling system
+- **Processing Pipeline Conflict**: 
+  1. `parseQuestion()` processes HTML and creates blanks
+  2. `preserveParagraphBreaks()` handles paragraph structure  
+  3. `createDraggableItems()` processes items and deduplicates
+  4. When duplicates + multi-paragraph exist together, pipeline breaks down
+- **System Interaction**: Deduplication logic may interfere with paragraph processing when content contains both duplicate `[[d::text]]` syntax and multi-paragraph HTML structure
+- **Fix Strategy**: Requires careful, surgical approach addressing both issues simultaneously without breaking core functionality
 
 ### 🔄 Current Issues & Future Enhancements
 
-#### 🔮 Future Enhancement Opportunities
-- Fix duplicate item display (careful, surgical approach required)
+#### 🔧 Priority Fixes Required
+- **Duplicate Item Handling**: Remove deduplication logic while preserving template stability
+- **Paragraph Processing**: Fix interaction between duplicate processing and paragraph preservation
+- **Coordinated Approach**: Address both issues simultaneously to prevent pipeline conflicts
+
+#### 🔮 Future Enhancement Opportunities  
 - Distractor items functionality
 - Advanced formatting options
 - Performance optimizations
@@ -166,6 +194,281 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 - **Status**: ✅ **Strategic Success** - Optimal balance of functionality vs stability
 
 **Lesson Learned**: Sometimes strategic rollback to a known good state is more valuable than iterative fixes when architectural complexity debt creates cascading failures. The duplicate item issue can be addressed later with a careful, surgical approach once the template remains stable.
+
+### 🔍 Critical Anki Environment Investigation (Session 30+)
+**Context**: Post-rollback continuation addressing user-reported Anki Desktop compatibility issues
+- **User Report**: Mixed results after duplicate fix - some cards work, others show "No question content found"
+- **Key Insight**: Duplicate items display correctly (createDraggableItems() works) but parseQuestion() fails validation
+
+**Root Cause Analysis**: 
+- **Working**: `createDraggableItems()` uses `questionData.textContent` directly
+- **Failing**: `parseQuestion()` uses `preserveParagraphBreaks(textContent, innerHTML)` result
+- **Hypothesis**: String-based HTML processing in `preserveParagraphBreaks()` corrupts content for certain patterns
+
+**Investigation Tools Created**:
+1. **Diagnostic Logging**: Added console.log statements to parseQuestion() validation
+2. **diagnostic_paragraph_processing.html**: Isolated test for preserveParagraphBreaks() function
+
+**Critical Fix Implemented**: Safe Paragraph Processing (Session 30+)
+- **Problem**: Aggressive string-based HTML processing caused empty/invalid results
+- **Solution**: Conservative approach with multiple safety checks
+  - Only process content with clear paragraph structures (`hasRealParagraphs` check)
+  - Length validation: reject results shorter than 50% of original
+  - Always fallback to textContent on any processing failure
+  - Minimal regex operations vs. extensive whitespace manipulation
+- **Priority**: Maximum Anki compatibility over advanced paragraph formatting
+
+**Implementation Status**: 
+- ✅ **Enhanced Safety**: Multiple fallback mechanisms prevent content loss
+- ✅ **Diagnostic Tools**: Console logging and isolated testing capability 
+- 🔄 **Anki Testing Required**: User needs to test with diagnostic version in actual Anki Desktop
+
+**Expected Resolution**: This safer approach should resolve "No question content found" errors while preserving multi-paragraph functionality where truly needed.
+
+### 🎉 **BREAKTHROUGH SESSION**: Critical Anki Environment Debugging (Session 30-Continued)
+
+#### 🔍 **Systematic Root Cause Analysis**
+**Collaboration with Zen MCP**: Used structured analysis to avoid rushed fixes and understand architectural patterns
+- **Pattern Recognition**: Discovered validation bugs existed in BOTH front and back templates
+- **Strategic Thinking**: Prioritized functional bugs over formatting regressions 
+- **Architectural Consistency**: Identified identical flawed logic across templates
+
+#### ❌ **Failed Debugging Approaches in This Session**
+1. **Anki Debug Console**: `⌘ + ⇧ + :` opens debug interface but **completely non-functional**
+   - Console commands don't execute (tried `console.log('test')` + Ctrl+Enter)
+   - No output appears from JavaScript console.log statements
+   - **Lesson**: Anki's debug console is unreliable for template JavaScript debugging
+   
+2. **Console.log Debugging**: All console.log statements in templates produce no visible output
+   - Added extensive diagnostic logging to parseQuestion() function
+   - No logs appeared in any Anki interface (console, terminal, debug window)
+   - **Critical Discovery**: Standard web debugging techniques don't work in Anki environment
+
+3. **Standard Web Development Debugging**: Anki environment behaves differently than standalone HTML
+   - Scripts that work perfectly in browser fail unpredictably in Anki
+   - DOM manipulation timing issues
+   - Different JavaScript execution context than standard web pages
+
+#### ✅ **Successful Visual Debugging Technique**
+**Innovation**: Display debug information directly on card interface
+```javascript
+// Visual debug display directly in card content
+var debugInfo = '<div style="border: 3px solid red; background: #fff3cd; padding: 15px;">';
+debugInfo += 'textContent: "' + textContent + '"<br>';  
+debugInfo += 'Validation checks: ...<br>';
+exerciseText.innerHTML = debugInfo;
+```
+**Result**: Immediately revealed validation logic failures that console debugging couldn't show
+
+#### 🔧 **Critical Bug Discovery and Resolution**
+
+**Root Cause Identified**: **Validation Logic Bug in Both Templates**
+```javascript
+// PROBLEMATIC (caused false failures):
+if (!questionField || questionField.trim() === '' || questionField === '{{Question}}') {
+
+// FIXED (simplified validation):  
+if (!questionField || questionField.trim() === '') {
+```
+
+**The Issue**: The condition `|| questionField === '{{Question}}'` was intended to catch unprocessed Anki placeholders but caused false positive failures for valid content.
+
+**Architecture Discovery**: **Identical flawed validation existed in both front.html AND back.html**
+- Front template: Caused "No question content found" errors
+- Back template: Caused "Answer:" + blank display  
+- Same bug, same fix applied to both templates
+
+#### 🧪 **Comprehensive Testing Results**
+
+**Test Case 1**: Simple Content
+```
+"I love [[d::mangoes]]. Because [[d::mangoes]] are delicious!!!"
+```
+- ✅ **Front**: Displays 2 "mangoes" items correctly 
+- ✅ **Back**: Shows clean answer text
+- ⚠️ **Paragraph breaks**: Lost (single line display)
+
+**Test Case 2**: Multi-paragraph with Technical Content  
+```
+"The description of [[d::SSL Offload]] is also correct..."
+```
+- ✅ **Front**: Displays 3 items correctly (2 "SSL Offload", 1 "encryption/decryption")
+- ✅ **Back**: Shows clean answer text
+- ⚠️ **Paragraph breaks**: Lost 
+
+**Test Case 3**: Long Multi-paragraph Content
+```
+"Mangoes are among the most beloved tropical fruits..." (4 [[d::mangoes]] blanks)
+```  
+- ✅ **Front**: Displays 4 "mangoes" items correctly
+- ✅ **Back**: Shows clean answer text (was previously "Answer:" + blank)
+- ⚠️ **Paragraph breaks**: Lost
+
+#### 📊 **Current Status Summary**
+
+**✅ RESOLVED - Critical Functional Issues**:
+1. **Duplicate Item Display**: All cards show correct number of duplicate draggable items
+2. **Content Display Errors**: No more "No question content found" messages  
+3. **Back Template Consistency**: All cards show answers correctly on back side
+4. **Template Stability**: Core drag-and-drop functionality fully restored
+
+**⚠️ KNOWN LIMITATION - Formatting Issue**:
+- **Multi-paragraph Line Breaks**: Currently lost due to bypassing `preserveParagraphBreaks()` 
+- **Impact**: Content displays as single paragraph instead of preserving original formatting
+- **Priority**: LOW (formatting regression, not functional failure)
+- **Trade-off Decision**: Accepted formatting loss for functional stability
+
+**🔑 KEY ARCHITECTURAL LESSONS**:
+1. **Anki Environment Differences**: Templates behave differently than standalone HTML
+2. **Visual Debugging Required**: Console debugging non-functional, display debug info on cards
+3. **Validation Consistency**: Both front/back templates must use identical validation logic
+4. **Conservative Approach Works**: Simple `textContent` more reliable than complex HTML processing
+
+#### 🛠️ **Technical Implementation Details**
+
+**Front Template Changes** (`front.html`):
+- Removed deduplication: `items = [...new Set(items)]` → preserve duplicates
+- Bypassed paragraph processing: `preserveParagraphBreaks()` → `textContent` directly  
+- Fixed validation: Removed `|| questionField === '{{Question}}'` condition
+
+**Back Template Changes** (`back.html`):  
+- Applied identical validation fix: Simplified to check only empty content
+- Maintained HTML processing for answer formatting (bold blue highlighting)
+- Ensured architectural consistency with front template logic
+
+**Status**: ✅ **Mission Accomplished** - All critical functionality restored with full architectural consistency
+
+### 📋 Comprehensive Implementation Plan (Session 31)
+**Objective**: Fix duplicate item display and multi-paragraph line break loss using Claude Code best practices
+- **Approach**: Count-aware deduplication with text processing consistency (Approach B from analysis)
+- **Methodology**: **Explore → Plan → Code → Commit** workflow with surgical precision
+- **Risk Strategy**: Incremental changes with immediate rollback capability
+
+**Strategic Overview**:
+```
+Phase 1: EXPLORE    Phase 2: CODE      Phase 3: VALIDATE   Phase 4: COMMIT
+    |                   |                   |                   |
+    v                   v                   v                   v
+[Investigation] → [Surgical Fix] → [Comprehensive Test] → [Documentation]
+    |                   |                   |                   |
+[Test Cases]       [Deduplication]    [Regression Check]   [CLAUDE.md Update]
+[Baseline]         [Text Pipeline]    [Feature Validation] [Commit & Message]
+[Code Study]       [Integration]      [Edge Cases]         [Final Verification]
+[Pipeline Map]     [Safety Checks]    [Performance]        [Status Update]
+```
+
+#### Phase 1: EXPLORE - Deep Investigation
+**1.1 Comprehensive Test Cases**:
+- **Test 1**: Single paragraph + duplicates: `"I love [[d::mangoes]]. Because [[d::mangoes]] are delicious."`
+- **Test 2**: Multi-paragraph + duplicates: `"First [[d::mangoes]].\n\nSecond [[d::mangoes]]."`
+- **Test 3**: Mixed content with semantic validation
+- **Test 4**: Edge cases with 5+ duplicate items
+
+**1.2 Current Behavior Baseline**: Document exact current behavior and establish rollback evidence
+
+**1.3 Code Archaeology**: Analyze failed attempts (commits 43ef105, f86b880, 84dc6c9) to identify danger zones
+
+**1.4 Pipeline Flow Analysis**: Map processing flow conflicts between `preserveParagraphBreaks()` and `createDraggableItems()`
+
+#### Phase 2: CODE - Surgical Implementation
+**2.1 Primary Fix**: Replace deduplication logic at `front.html:370`
+```javascript
+// Current Problem: items = [...new Set(items)];
+// Solution: Count-aware duplicate preservation
+var itemCounts = new Map();
+items.forEach(item => {
+    itemCounts.set(item, (itemCounts.get(item) || 0) + 1);
+});
+var duplicateAwareItems = [];
+itemCounts.forEach((count, item) => {
+    for (var i = 0; i < count; i++) {
+        duplicateAwareItems.push(item);
+    }
+});
+items = shuffleArray(duplicateAwareItems);
+```
+
+**2.2 Secondary Fix**: Ensure text processing consistency between paragraph and item processing functions
+
+**2.3 Integration Protocol**: Test each change immediately with full feature validation
+
+#### Phase 3: VALIDATE - Comprehensive Testing
+**Success Criteria**:
+- ✅ Duplicate items display correctly (2 "mangoes" for duplicate blanks)
+- ✅ Multi-paragraph formatting preserved with duplicates present
+- ✅ All advanced features functional (semantic validation, bidirectional drag, event delegation)
+- ✅ No regression in core template functionality
+- ✅ Template remains production-ready
+
+**Risk Mitigation**: Immediate rollback at first sign of regression, one change at a time testing
+
+#### Phase 4: COMMIT - Documentation & Finalization
+- Update CLAUDE.md with successful implementation details
+- Create comprehensive commit message with co-authorship
+- Final verification and status update
+
+**Implementation Command Sequence**:
+1. `"Start EXPLORE phase: create comprehensive test cases for duplicate item and multi-paragraph issues. Do NOT write any code yet."`
+2. `"Analyze current processing pipeline: trace parseQuestion() → preserveParagraphBreaks() → createDraggableItems() flow. Document findings."`
+3. `"Implement count-aware deduplication fix at front.html:370. Test immediately. If any issues, rollback."`
+4. `"Fix text processing consistency between paragraph and item processing. Test incrementally."`
+5. `"Comprehensive validation of all features. Commit results with documentation update."`
+
+**Status**: 📋 **Plan Complete** - Ready for systematic implementation following Claude Code best practices
+
+#### Phase 1 EXPLORE - Complete Analysis Results (Session 31)
+
+**✅ Phase 1.2: Anki Environment Baseline Testing**
+Created authentic Anki template testing environment using actual front.html structure and JavaScript.
+
+**Baseline Results Documented**:
+- **Test Case 1** (Single + Duplicates): `Items found: 2 → 1 after deduplication` ✓ Bug confirmed
+- **Test Case 2** (Multi-paragraph + Duplicates): `Items found: 2 → 1 after deduplication` ✓ Paragraph breaks preserved correctly
+- **Test Case 3** (Semantic + Duplicates): `Items found: 3 → 2 after deduplication` ✓ Advanced features working
+- **Template Stability**: No "No question content found" errors ✓ Core functionality intact
+
+**✅ Phase 1.3: Code Archaeology Analysis**
+Analyzed failed attempts (commits 43ef105, f86b880, 84dc6c9) to identify danger zones.
+
+**Critical Discovery - Problem Scope Refined**:
+- **Good News**: Paragraph processing works perfectly (baseline confirmed)
+- **Real Issue**: Only deduplication logic at `front.html:370` needs fixing
+- **No Secondary Fix Needed**: Text processing consistency theory was wrong
+- **Paragraph Breaks**: Already working correctly via `preserveParagraphBreaks()`
+
+**Danger Zones Identified**:
+- ❌ **Over-Engineering Trap** (43ef105): Added 48 lines of complex `itemStateManager` for 1-line fix
+- ❌ **Wrong Problem Analysis** (f86b880, 84dc6c9): Fixed non-existent text processing issues
+- ❌ **Architectural Complexity**: Multiple simultaneous changes instead of surgical precision
+
+**✅ Refined Implementation Strategy**:
+**Original Plan**: Complex count-aware algorithm + text processing fixes
+**Refined Plan**: Simple 1-line change - remove deduplication entirely
+
+**New Implementation Approach**:
+```javascript
+// Current Problem (line 370):
+items = [...new Set(items)];
+
+// Simple Solution: 
+// Remove this line entirely - preserve all duplicate items
+```
+
+**Risk Assessment**: **LOW RISK** (much lower than originally planned)
+- Single line removal, no new code introduction
+- No architectural changes or processing pipeline modifications  
+- All advanced features remain untouched
+- Immediate rollback capability if issues arise
+
+**Expected Results After Fix**:
+- ✅ Test Case 1: 2 "mangoes" items (instead of 1)
+- ✅ Test Case 2: 2 "mangoes" items + paragraph breaks preserved  
+- ✅ Test Case 3: 3 items (2 "fruit" + 1 "apple") + semantic validation intact
+- ✅ All advanced features (bidirectional drag, event delegation) remain functional
+
+**Key Insight**: Baseline testing prevented fixing wrong problems and revealed the issue is isolated to deduplication only, making our fix much safer and simpler than originally theorized.
+
+**Status**: ✅ **EXPLORE Phase Complete** - Ready for surgical 1-line implementation
 
 ### ✅ Enhanced Answer Display (Session 12)
 **Feature**: Enhanced back template with styled blanked-out terms

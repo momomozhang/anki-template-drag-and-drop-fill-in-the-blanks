@@ -123,44 +123,56 @@ function sanitizeHTML(html) {
     return temp.innerHTML;
 }
 
-// Preserve paragraph breaks from HTML formatting
+// Safe paragraph breaks preservation with Anki compatibility
 function preserveParagraphBreaks(textContent, innerHTML) {
+    // Always prioritize textContent for maximum compatibility
+    // Only attempt paragraph processing if there's clear evidence of multi-paragraph content
     if (!innerHTML || innerHTML === textContent) {
         return textContent;
     }
     
     try {
-        // Simple DOM approach: create element and extract with preserved spacing
-        var temp = document.createElement('div');
-        temp.innerHTML = innerHTML;
+        // Check if innerHTML contains actual paragraph/div structures
+        var hasRealParagraphs = /<\/p>|<\/div>|<br\s*\/?>\s*<br/.test(innerHTML);
         
-        // Walk through child nodes and preserve paragraph boundaries
-        var result = '';
-        var children = temp.childNodes;
+        if (!hasRealParagraphs) {
+            // No paragraph structures detected, use textContent for safety
+            return textContent;
+        }
         
-        for (var i = 0; i < children.length; i++) {
-            var node = children[i];
-            
-            if (node.nodeType === Node.TEXT_NODE) {
-                result += node.textContent;
-            } else if (node.nodeType === Node.ELEMENT_NODE) {
-                var tagName = node.tagName.toLowerCase();
-                
-                if (tagName === 'p' || tagName === 'div') {
-                    if (result && !result.endsWith('\n\n')) {
-                        result += '\n\n';
-                    }
-                    result += node.textContent;
-                } else if (tagName === 'br') {
-                    result += '\n';
-                } else {
-                    result += node.textContent;
-                }
-            }
+        // Conservative approach: minimal processing only for clear paragraph breaks
+        var result = innerHTML;
+        
+        // Convert only clear paragraph separators
+        result = result.replace(/<\/p>\s*<p[^>]*>/gi, '\n\n');
+        result = result.replace(/<\/div>\s*<div[^>]*>/gi, '\n\n');
+        result = result.replace(/<br\s*\/?>\s*<br\s*\/?>/gi, '\n\n');
+        result = result.replace(/<br\s*\/?>/gi, '\n');
+        
+        // Simple tag removal
+        result = result.replace(/<[^>]+>/g, '');
+        
+        // Basic entity decoding
+        result = result.replace(/&nbsp;/g, ' ');
+        result = result.replace(/&amp;/g, '&');
+        result = result.replace(/&lt;/g, '<');
+        result = result.replace(/&gt;/g, '>');
+        result = result.replace(/&quot;/g, '"');
+        
+        // Conservative whitespace cleanup
+        result = result.replace(/[ \t]+/g, ' ');
+        result = result.replace(/\n{3,}/g, '\n\n');
+        result = result.trim();
+        
+        // Safety check: if processing resulted in empty/invalid content, use textContent
+        if (!result || result.length < textContent.length * 0.5) {
+            console.log('DIAGNOSTIC - Paragraph processing result too short, using textContent fallback');
+            return textContent;
         }
         
         return result;
     } catch (error) {
+        console.log('DIAGNOSTIC - Paragraph processing error, using textContent fallback:', error);
         return textContent;
     }
 }
@@ -178,13 +190,18 @@ function parseQuestion() {
     var textContent = questionData.textContent;
     var innerHTML = questionData.innerHTML;
     
-    // Enhanced text with paragraph breaks preserved
-    var questionField = preserveParagraphBreaks(textContent, innerHTML);
+    // TEMPORARY: Skip paragraph processing for maximum Anki compatibility
+    // Use textContent directly until paragraph processing is fully debugged
+    var questionField = textContent;
     
-    if (!questionField || questionField.trim() === '' || questionField === '{{Question}}') {
+    
+    // Simplified validation - only check for truly empty content
+    if (!questionField || questionField.trim() === '') {
         exerciseText.innerHTML = '<p style="color: #666; font-style: italic;">No question content found. Please add content to your Question field.</p>';
         return;
     }
+    
+    // REMOVED: problematic {{Question}} check that was causing false failures
     
     // Clear all state
     studyState.correctAnswers.clear();
@@ -306,8 +323,7 @@ function createDraggableItems() {
         return;
     }
     
-    // Remove duplicates and shuffle
-    items = [...new Set(items)];
+    // Shuffle items (duplicates preserved)
     items = shuffleArray(items);
     
     // Create draggable elements
