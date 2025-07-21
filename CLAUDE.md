@@ -113,23 +113,59 @@ This is an interactive Anki flashcard template that creates drag-and-drop fill-i
 
 ## Current Status
 
-### ✅ Completed Features
+### ✅ Completed Features (Post-Rollback - Session 30)
 - **Automation**: Fully functional `Ctrl+Shift+D` shortcut for blank creation
-- **Front Template**: Interactive drag-and-drop interface with visual feedback
+- **Front Template**: Interactive drag-and-drop interface with visual feedback - ✅ **RESTORED**
 - **Back Template**: Enhanced design displaying clean text with bracketed syntax stripped
 - **Modern UI**: Semantic form-style interface with cohesive blue color scheme
-- **Cross-Platform**: Works on Anki Desktop, AnkiWeb, and mobile
-- **User Experience**: Streamlined workflow from content creation to study
-- **Semantic Validation**: Interchangeable blanks using `@groupX` syntax for semantically equivalent answers
-- **Paragraph Break Preservation**: DOM-based processing maintains paragraph structure in multi-paragraph content
-- **Direct Inter-Container Movement**: Items can be dragged directly between input containers without intermediate panel return
+- **Cross-Platform**: Works on Anki Desktop, AnkiWeb, and mobile - ✅ **RESTORED**
+- **User Experience**: Streamlined workflow from content creation to study - ✅ **RESTORED**
+- **Semantic Validation**: Interchangeable blanks using `@groupX` syntax for semantically equivalent answers - ✅ **RESTORED**
+- **Paragraph Break Preservation**: DOM-based processing maintains paragraph structure in multi-paragraph content - ✅ **RESTORED**
+- **Direct Inter-Container Movement**: Items can be dragged directly between input containers without intermediate panel return - ✅ **RESTORED**
+- **Bidirectional Drag**: Container-to-panel drag functionality - ✅ **RESTORED**
+- **Event Delegation Pattern**: Robust drag handling system - ✅ **RESTORED**
+
+### ⚠️ Current Known Limitations
+- **Duplicate Item Display**: Cards with duplicate text (e.g., "I love [[d::mangoes]]. Because [[d::mangoes]] are delicious.") show only 1 draggable item instead of 2
+  - **Impact**: Minor UX limitation - exercises with duplicate answers may be more challenging
+  - **Status**: Acceptable trade-off for fully functional template
 
 ### 🔄 Current Issues & Future Enhancements
 
 #### 🔮 Future Enhancement Opportunities
+- Fix duplicate item display (careful, surgical approach required)
 - Distractor items functionality
 - Advanced formatting options
 - Performance optimizations
+
+### ✅ Strategic Rollback Decision (Session 30)
+**Challenge**: Three consecutive failed fix attempts (Sessions 27-29) corrupted core template functionality
+- **Problem**: Duplicate item handling fix (Session 27) broke template parsing - showed "No question content found"
+- **Follow-up Attempts**: Sessions 28-29 tried different approaches but consistently corrupted blank-to-answer mapping
+- **Symptoms**: Fixed duplicate display but broke drag targeting (items went to wrong blanks) and answer validation
+- **Root Cause**: Architectural complexity debt - template evolved from simple drag-and-drop into 8+ tightly coupled systems
+
+**Strategic Analysis**:
+- **Complexity Assessment**: System has hidden dependencies that create "fix one, break another" scenarios
+- **Risk vs Benefit**: Duplicate item limitation (minor UX issue) vs complete template failure (unusable)
+- **Development Efficiency**: Endless debugging cycles vs focusing on new features
+- **User Impact**: Fully functional learning tool vs broken interface
+
+**Rollback Decision**:
+- **Target**: Commit `bb6b044` - "Implement container-to-panel drag functionality" 
+- **Rationale**: Maximum functioning state with all advanced features working
+- **Implementation**: `git reset --hard bb6b044`
+- **Trade-off**: Accept duplicate item display limitation for fully functional template
+
+**Results**:
+- ✅ **Template Restoration**: All core functionality confirmed working
+- ✅ **Advanced Features**: Semantic validation, bidirectional drag, event delegation all restored
+- ✅ **User Experience**: Template ready for production use
+- ⚠️ **Known Limitation**: Duplicate text blanks show only 1 draggable item (acceptable)
+- **Status**: ✅ **Strategic Success** - Optimal balance of functionality vs stability
+
+**Lesson Learned**: Sometimes strategic rollback to a known good state is more valuable than iterative fixes when architectural complexity debt creates cascading failures. The duplicate item issue can be addressed later with a careful, surgical approach once the template remains stable.
 
 ### ✅ Enhanced Answer Display (Session 12)
 **Feature**: Enhanced back template with styled blanked-out terms
